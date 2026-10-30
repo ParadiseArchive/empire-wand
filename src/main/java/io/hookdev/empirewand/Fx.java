@@ -44,6 +44,18 @@ public final class Fx {
         level.levelEvent(2001, pos, Block.getId(state));
     }
 
+    /** A beam of sparks in the spell's colour, from the wand's tip to where it lands. */
+    public static void beam(ServerLevel level, Vec3 from, Vec3 to, int colour) {
+        Vec3 step = to.subtract(from);
+        int n = (int) Math.min(120, Math.ceil(step.length() * 2));
+        if (n <= 0) return;
+        var dust = new net.minecraft.core.particles.DustParticleOptions(colour, 1.0f);
+        for (int i = 0; i <= n; i++) {
+            Vec3 at = from.add(step.scale(i / (double) n));
+            level.sendParticles(dust, true, false, at.x, at.y, at.z, 1, 0.03, 0.03, 0.03, 0);
+        }
+    }
+
     public static void particles(ServerLevel level, ParticleOptions type, Vec3 at, int count, double spread, double speed) {
         level.sendParticles(type, at.x, at.y, at.z, count, spread, spread, spread, speed);
     }

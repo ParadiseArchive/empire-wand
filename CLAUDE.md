@@ -30,3 +30,11 @@ What changed from 2013, and why:
 ## Backlog
 - [ ] Playtest in the game with the owner.
 - Ideas only when the owner asks.
+- [ ] Pimp it up (owner, 31 Oct 2026: yes to all of these, in this order):
+  1. Looks: a 3D wand with a glint, its crystal in the colour of the selected spell, a beam or trail of sparks from the tip to the target, a cast sound per spell.
+  2. A spell wheel: hold a key (or sneak and scroll), pick a spell from a round wheel of pixel icons; right-click keeps working.
+  3. Blood Magic costs blood: half a heart per cast, and much stronger for it.
+  4. New Empire Wand spells: Meteor Shower, Chain Lightning, Earthquake, Tornado.
+  5. Three more wands, three spells each: Frost (ice wave, freeze, blizzard), Void (blink, black hole, levitate), Nature (roots, spores, overgrowth).
+  6. Spell scrolls: a new wand knows a few spells; the rest are scrolls found in dungeon, temple and stronghold chests.
+  Not: server options (a gamerule for block damage, teams).

@@ -1,6 +1,45 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "empirewand:item/blood_magic"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui",
+          "ground",
+          "fixed"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "empirewand:item/blood_magic",
+          "tints": [
+            {
+              "type": "minecraft:constant",
+              "value": -1
+            },
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": 9109504
+            }
+          ]
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "empirewand:item/blood_magic_3d",
+      "tints": [
+        {
+          "type": "minecraft:constant",
+          "value": -1
+        },
+        {
+          "type": "minecraft:custom_model_data",
+          "index": 0,
+          "default": 9109504
+        }
+      ]
+    }
   }
 }

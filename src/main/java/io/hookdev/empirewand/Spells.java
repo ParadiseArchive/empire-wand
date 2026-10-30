@@ -55,11 +55,12 @@ public final class Spells {
 
     public static void cast(ServerPlayer player, Spell spell) {
         ServerLevel level = (ServerLevel) player.level();
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), castSound(spell), SoundSource.PLAYERS, 0.8f, 1);
         switch (spell) {
             case EXPLODE -> explode(player, level);
-            case SPARK -> spark(player, level, Fx.BLACK, Fx.RED, 3);
-            case LITTLE_SPARK -> spark(player, level, Fx.WHITE, Fx.RED, 5);
-            case BLOOD_SPARK -> spark(player, level, 0x3D0000, 0x3D0000, 3);
+            case SPARK -> spark(player, level, spell, Fx.BLACK, Fx.RED, 3);
+            case LITTLE_SPARK -> spark(player, level, spell, Fx.WHITE, Fx.RED, 5);
+            case BLOOD_SPARK -> spark(player, level, spell, 0x3D0000, 0x3D0000, 3);
             case LEAP -> leap(player, level);
             case LAUNCH -> launch(player, level);
             case COMET -> fireball(player, level, false);
@@ -74,6 +75,33 @@ public final class Spells {
             case JUMP -> jump(player, level);
             case CAPTURE -> capture(player, level);
         }
+    }
+
+    /** Each spell its own sound as it leaves the wand. */
+    static net.minecraft.sounds.SoundEvent castSound(Spell spell) {
+        return switch (spell) {
+            case EXPLODE, EXPLOSIVE -> SoundEvents.EVOKER_CAST_SPELL;
+            case LIGHTNING_ARROW -> SoundEvents.ARROW_SHOOT;
+            case ESCAPE, JUMP -> SoundEvents.FIRECHARGE_USE;
+            case LAUNCH, LEAP -> SoundEvents.ENDER_PEARL_THROW;
+            case CONFUSE -> SoundEvents.EVOKER_PREPARE_WOLOLO;
+            case CAPTURE -> SoundEvents.SHULKER_SHOOT;
+            case LITTLE_SPARK, SPARK, LIGHTNING_STORM -> SoundEvents.EVOKER_PREPARE_ATTACK;
+            case COMET -> SoundEvents.BLAZE_SHOOT;
+            case POISON_WAVE -> SoundEvents.WITCH_THROW;
+            case BLOOD_BLOCK, BLOOD_WAVE, BLOOD_SPARK -> SoundEvents.EVOKER_PREPARE_SUMMON;
+        };
+    }
+
+    /** The tip of the wand in the player's right hand. */
+    static Vec3 tip(Player player) {
+        Vec3 look = player.getLookAngle(), right = look.cross(new Vec3(0, 1, 0)).normalize();
+        return player.getEyePosition().add(look.scale(0.8)).add(right.scale(0.35)).add(0, -0.25, 0);
+    }
+
+    /** A beam from the wand to there, in the spell's colour. */
+    static void beam(ServerPlayer player, ServerLevel level, Vec3 to, Spell spell) {
+        Fx.beam(level, tip(player), to, spell.colour);
     }
 
     // ---------- where it lands ----------
@@ -145,13 +173,15 @@ public final class Spells {
     /** Explode: a blast of 5 where you look, with a white firework. */
     static void explode(ServerPlayer player, ServerLevel level) {
         Vec3 at = Vec3.atCenterOf(target(player, 50));
+        beam(player, level, at, Spell.EXPLODE);
         Fx.firework(level, at, Shape.BURST, Fx.WHITE, Fx.BLACK, false, false);
         level.explode(null, at.x, at.y, at.z, 5, false, Level.ExplosionInteraction.TNT);
     }
 
     /** Spark and Little Spark (and Blood Spark): a firework where you look and a zap (Little Spark is the stronger one). */
-    static void spark(ServerPlayer player, ServerLevel level, int colour, int fade, float damage) {
+    static void spark(ServerPlayer player, ServerLevel level, Spell spell, int colour, int fade, float damage) {
         Vec3 at = Vec3.atCenterOf(target(player, 50));
+        beam(player, level, at, spell);
         Fx.firework(level, at, Shape.BURST, colour, fade, colour == 0x3D0000, true);
         zap(level, at, player, damage, false);
     }
@@ -172,6 +202,7 @@ public final class Spells {
     /** Launch: everything within three blocks of what you look at goes up in the air. */
     static void launch(ServerPlayer player, ServerLevel level) {
         Vec3 at = targetEntity(player, 50);
+        beam(player, level, at, Spell.LAUNCH);
         Fx.firework(level, at, Shape.SMALL_BALL, Fx.BLUE, Fx.PURPLE, false, false);
         for (LivingEntity entity : near(level, at, 3, null)) {
             push(entity, new Vec3(0, 1.5, 0));
@@ -294,6 +325,7 @@ public final class Spells {
         BlockPos armed = BLOOD_BLOCKS.remove(player.getUUID());
         if (armed == null || !level.getBlockState(armed).is(Blocks.REDSTONE_BLOCK)) { // the first click
             BlockPos at = target(player, 50);
+            beam(player, level, Vec3.atCenterOf(at), Spell.BLOOD_BLOCK);
             BlockState redstone = Blocks.REDSTONE_BLOCK.defaultBlockState();
             level.setBlock(at, redstone, 3);
             BLOOD_BLOCKS.put(player.getUUID(), at);
@@ -308,6 +340,7 @@ public final class Spells {
             return;
         }
         Vec3 aim = Vec3.atCenterOf(target(player, 50));
+        beam(player, level, aim, Spell.BLOOD_BLOCK);
         FallingBlockEntity block = FallingBlockEntity.fall(level, armed, Blocks.REDSTONE_BLOCK.defaultBlockState());
         block.disableDrop();
         block.dropItem = false;
@@ -338,6 +371,7 @@ public final class Spells {
     /** Confuse: everything within three blocks of what you look at gets dizzy for 25 seconds. */
     static void confuse(ServerPlayer player, ServerLevel level) {
         Vec3 at = targetEntity(player, 50);
+        beam(player, level, at, Spell.CONFUSE);
         Fx.firework(level, at, Shape.BURST, new int[] {0x2F002F, 0x480048}, new int[] {0}, false, false);
         for (LivingEntity entity : near(level, at, 3, null)) entity.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 500, 3));
     }
@@ -408,6 +442,7 @@ public final class Spells {
         }
         if (best == null) return;
         LivingEntity caught = best;
+        beam(player, level, caught.position().add(0, caught.getBbHeight() / 2, 0), Spell.CAPTURE);
         CARRIED.put(player.getUUID(), caught);
         caught.setNoGravity(true);
         carry(player, caught);

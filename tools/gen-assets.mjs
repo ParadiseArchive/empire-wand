@@ -47,50 +47,113 @@ function png(pixels) {
 function picture(path, rows, key) {
   write(join(ASSETS, 'textures', path + '.png'), png(rows.map((row) => [...row].map((c) => key[c] || null))));
 }
+// a texture drawn with set(x, y, colour) and rect(x, y, w, h, colour)
+function texture(path, w, h, draw) {
+  const px = Array.from({ length: h }, () => Array(w).fill(null));
+  const set = (x, y, c) => { if (x >= 0 && x < w && y >= 0 && y < h) px[y][x] = c; };
+  const rect = (x, y, rw, rh, c) => { for (let j = y; j < y + rh; j++) for (let i = x; i < x + rw; i++) set(i, j, c); };
+  draw({ set, rect });
+  write(join(ASSETS, 'textures', path + '.png'), png(px));
+}
 
-// ---------- the wands: held like a blaze rod, from bottom left to top right ----------
-// Empire Wand: a dark rod with gold bands and a red crystal on top
-picture('item/empire_wand', [
-  '...........rRr..',
-  '..........rRWRr.',
-  '..........RRRRr.',
-  '...........rRr..',
-  '..........gG....',
-  '.........gG.....',
-  '........dD......',
-  '.......dD.......',
-  '......gG........',
-  '.....dD.........',
-  '....dD..........',
-  '...gG...........',
-  '..dD............',
-  '.dD.............',
-  '.k..............',
-  '................',
-], { r: '#8c1020', R: '#e0283c', W: '#ffb0b8', g: '#b8862a', G: '#ffd23f', d: '#2a1c18', D: '#4a332a', k: '#120c0a' });
-// Blood Magic: a bone-white rod with a dark red orb dripping blood
-picture('item/blood_magic', [
-  '..........oOo...',
-  '.........oOPOo..',
-  '.........OOOOo..',
-  '.........oOOo...',
-  '..........ob....',
-  '.........bB..o..',
-  '........bB......',
-  '.......bB....o..',
-  '......cC........',
-  '.....bB.........',
-  '....bB..........',
-  '...cC...........',
-  '..bB............',
-  '.bB.............',
-  '.c..............',
-  '................',
-], { o: '#4a0008', O: '#9a0a1a', P: '#ff5060', b: '#cfc6b0', B: '#efe8d6', c: '#8a1520', C: '#c0202f' });
-
-for (const name of ['empire_wand', 'blood_magic']) {
-  json(join(ASSETS, 'models/item', name + '.json'), { parent: 'minecraft:item/handheld', textures: { layer0: 'empirewand:item/' + name } });
-  json(join(ASSETS, 'items', name + '.json'), { model: { type: 'minecraft:model', model: 'empirewand:item/' + name } });
+// ---------- the wands ----------
+// Each wand: a flat icon (for the inventory, the ground and item frames) in two layers, the rod and a grey crystal
+// that takes the spell's colour; and a 3D wand in the hand: the same diagonal, built from boxes. The crystal's colour
+// comes from the wand's custom model data (WandItem.select), its first spell's colour by default.
+const WANDS = {
+  empire_wand: {
+    first: 0xF4F4F4,
+    icon: [
+      '...........rRr..',
+      '..........rRWRr.',
+      '..........RRRRr.',
+      '...........rRr..',
+      '..........gG....',
+      '.........gG.....',
+      '........dD......',
+      '.......dD.......',
+      '......gG........',
+      '.....dD.........',
+      '....dD..........',
+      '...gG...........',
+      '..dD............',
+      '.dD.............',
+      '.k..............',
+      '................',
+    ],
+    rod: { g: '#b8862a', G: '#ffd23f', d: '#2a1c18', D: '#4a332a', k: '#120c0a' },
+    crystal: { r: '#6e6e6e', R: '#c4c4c4', W: '#ffffff' },
+    // the 3D wand's colours: handle, band (and pommel), grip
+    handle: ['#2a1c18', '#4a332a'], band: ['#b8862a', '#ffd23f'], grip: ['#5a1a1a', '#7a2626'],
+  },
+  blood_magic: {
+    first: 0x8B0000,
+    icon: [
+      '..........oOo...',
+      '.........oOPOo..',
+      '.........OOOOo..',
+      '.........oOOo...',
+      '..........ob....',
+      '.........bB..d..',
+      '........bB......',
+      '.......bB....d..',
+      '......cC........',
+      '.....bB.........',
+      '....bB..........',
+      '...cC...........',
+      '..bB............',
+      '.bB.............',
+      '.c..............',
+      '................',
+    ],
+    rod: { b: '#cfc6b0', B: '#efe8d6', c: '#8a1520', C: '#c0202f', d: '#5a0010' },
+    crystal: { o: '#5a5a5a', O: '#b0b0b0', P: '#ffffff' },
+    handle: ['#cfc6b0', '#efe8d6'], band: ['#8a1520', '#c0202f'], grip: ['#5a0010', '#8a1520'],
+  },
+};
+for (const [name, wand] of Object.entries(WANDS)) {
+  picture('item/' + name, wand.icon, wand.rod);
+  picture('item/' + name + '_crystal', wand.icon, wand.crystal);
+  // the 3D wand's texture: handle (x 0-1), band (2-3), grip (4-5), a grey crystal (8-15, 0-7)
+  texture('item/' + name + '_3d', 16, 16, ({ set, rect }) => {
+    for (let y = 0; y < 16; y++) {
+      set(0, y, wand.handle[y % 3 === 0 ? 0 : 1]); set(1, y, wand.handle[0]);
+      set(2, y, wand.band[0]); set(3, y, wand.band[1]);
+      set(4, y, wand.grip[y % 2]); set(5, y, wand.grip[(y + 1) % 2]);
+    }
+    rect(8, 0, 8, 8, '#a8a8a8');
+    for (let i = 0; i < 8; i++) { set(8 + i, i, '#ffffff'); set(15 - i, i, '#d8d8d8'); set(8, i, '#6e6e6e'); set(8 + i, 7, '#6e6e6e'); }
+    set(10, 2, '#ffffff'); set(11, 2, '#ffffff'); set(10, 3, '#ffffff');
+  });
+  const tex = 'empirewand:item/' + name + '_3d';
+  const faces = (uv, tint) => Object.fromEntries(['north', 'south', 'east', 'west', 'up', 'down'].map((f) => [f, { uv, texture: '#wand', ...(tint ? { tintindex: 1 } : {}) }]));
+  const tilt = { origin: [8, 8, 8], axis: 'z', angle: -45 };
+  json(join(ASSETS, 'models/item', name + '.json'), { parent: 'minecraft:item/handheld', textures: { layer0: 'empirewand:item/' + name, layer1: 'empirewand:item/' + name + '_crystal' } });
+  json(join(ASSETS, 'models/item', name + '_3d.json'), {
+    textures: { wand: tex, particle: 'empirewand:item/' + name },
+    elements: [
+      { from: [7.25, 1, 7.25], to: [8.75, 2, 8.75], rotation: tilt, faces: faces([2, 0, 4, 1]) },            // the pommel
+      { from: [7.5, 2, 7.5], to: [8.5, 12, 8.5], rotation: tilt, faces: faces([0, 2, 1, 12]) },             // the handle
+      { from: [7.35, 3, 7.35], to: [8.65, 6, 8.65], rotation: tilt, faces: faces([4, 0, 6, 3]) },           // the grip
+      { from: [7.25, 11.5, 7.25], to: [8.75, 12.5, 8.75], rotation: tilt, faces: faces([2, 4, 4, 5]) },     // the band
+      { from: [7, 12.5, 7], to: [9, 15.5, 9], rotation: tilt, faces: faces([8, 0, 16, 8], true) },          // the crystal
+    ],
+    display: { // where a held stick sits (vanilla item/handheld), for a wand lying the same way
+      thirdperson_righthand: { rotation: [0, -90, 55], translation: [0, 4, 0.5], scale: [0.85, 0.85, 0.85] },
+      thirdperson_lefthand: { rotation: [0, 90, -55], translation: [0, 4, 0.5], scale: [0.85, 0.85, 0.85] },
+      firstperson_righthand: { rotation: [0, -90, 25], translation: [1.13, 3.2, 1.13], scale: [0.68, 0.68, 0.68] },
+      firstperson_lefthand: { rotation: [0, 90, -25], translation: [1.13, 3.2, 1.13], scale: [0.68, 0.68, 0.68] },
+      head: { rotation: [0, 180, 0], translation: [0, 13, 7], scale: [1, 1, 1] },
+    },
+  });
+  const tints = [{ type: 'minecraft:constant', value: -1 }, { type: 'minecraft:custom_model_data', index: 0, default: wand.first }];
+  json(join(ASSETS, 'items', name + '.json'), {
+    model: {
+      type: 'minecraft:select', property: 'minecraft:display_context',
+      cases: [{ when: ['gui', 'ground', 'fixed'], model: { type: 'minecraft:model', model: 'empirewand:item/' + name, tints } }],
+      fallback: { type: 'minecraft:model', model: 'empirewand:item/' + name + '_3d', tints },
+    },
+  });
 }
 
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------

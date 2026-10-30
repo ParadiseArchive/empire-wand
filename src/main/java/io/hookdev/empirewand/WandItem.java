@@ -34,9 +34,14 @@ public class WandItem extends Item {
 
     /** Selects the next spell and tells the player, above the hotbar. */
     public Spell next(ItemStack stack, Player player) {
-        int next = Math.floorMod(stack.getOrDefault(Content.SPELL.get(), 0) + 1, spells.size());
-        stack.set(Content.SPELL.get(), next);
-        Spell spell = spells.get(next);
+        return select(stack, Math.floorMod(stack.getOrDefault(Content.SPELL.get(), 0) + 1, spells.size()), player);
+    }
+
+    /** Selects this one of its spells: the crystal takes its colour (the item models tint it from custom model data). */
+    public Spell select(ItemStack stack, int index, Player player) {
+        stack.set(Content.SPELL.get(), index);
+        Spell spell = spells.get(index);
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(List.of(), List.of(), List.of(), List.of(spell.colour)));
         player.sendOverlayMessage(Component.translatable("message.empirewand.selected", spell.displayName()).withStyle(ChatFormatting.GOLD));
         return spell;
     }
@@ -49,6 +54,12 @@ public class WandItem extends Item {
             server.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1, player.getZ(), 30, 0.4, 0.6, 0.4, 0.3);
         }
         return InteractionResult.SUCCESS;
+    }
+
+    /** A wand always shimmers a little. */
+    @Override
+    public boolean isFoil(ItemStack stack) {
+        return true;
     }
 
     /** "Empire Wand (Explode)": red like the plugin's wand, its spell in dark aqua. */

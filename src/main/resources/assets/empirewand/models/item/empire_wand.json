@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "empirewand:item/empire_wand"
+    "layer0": "empirewand:item/empire_wand",
+    "layer1": "empirewand:item/empire_wand_crystal"
   }
 }
