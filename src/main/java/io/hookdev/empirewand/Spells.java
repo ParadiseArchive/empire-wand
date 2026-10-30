@@ -105,6 +105,10 @@ public final class Spells {
             case CONFUSE -> confuse(player, level);
             case POISON_WAVE -> poisonWave(player, level);
             case BLOOD_WAVE -> bloodWave(player, level);
+            case METEOR_SHOWER -> meteorShower(player, level);
+            case CHAIN_LIGHTNING -> chainLightning(player, level);
+            case EARTHQUAKE -> earthquake(player, level);
+            case TORNADO -> tornado(player, level);
             case JUMP -> jump(player, level);
             case CAPTURE -> capture(player, level);
         }
@@ -123,6 +127,10 @@ public final class Spells {
             case COMET -> SoundEvents.BLAZE_SHOOT;
             case POISON_WAVE -> SoundEvents.WITCH_THROW;
             case BLOOD_BLOCK, BLOOD_WAVE, BLOOD_SPARK -> SoundEvents.EVOKER_PREPARE_SUMMON;
+            case METEOR_SHOWER -> SoundEvents.GHAST_SHOOT;
+            case CHAIN_LIGHTNING -> SoundEvents.EVOKER_PREPARE_ATTACK;
+            case EARTHQUAKE -> SoundEvents.RAVAGER_ROAR;
+            case TORNADO -> SoundEvents.PHANTOM_FLAP;
         };
     }
 
@@ -511,6 +519,123 @@ public final class Spells {
         Fx.particles(level, ParticleTypes.PORTAL, at, 40, 0.5, 0.5);
         Fx.particles(level, ParticleTypes.SMOKE, at, 8, 0.3, 0.02);
         level.playSound(null, at.x, at.y, at.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 2, 1);
+    }
+
+    // ---------- new for the Empire Wand (owner, 31 Oct 2026) ----------
+
+    /** The living thing the player looks at (within two blocks of their look), up to range blocks away, or none. */
+    static @Nullable LivingEntity lookedAt(ServerPlayer player, ServerLevel level, double range) {
+        Vec3 eye = player.getEyePosition(), end = Vec3.atCenterOf(target(player, range));
+        LivingEntity best = null;
+        double nearest = Double.MAX_VALUE;
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(range), e -> e != player && e.isAlive())) {
+            var hit = entity.getBoundingBox().inflate(1.5).clip(eye, end);
+            if (hit.isPresent() && eye.distanceToSqr(hit.get()) < nearest) {
+                nearest = eye.distanceToSqr(hit.get());
+                best = entity;
+            }
+        }
+        return best;
+    }
+
+    /** Meteor Shower: twelve fireballs out of the sky round where you look, one after the other. */
+    static void meteorShower(ServerPlayer player, ServerLevel level) {
+        Vec3 centre = Vec3.atCenterOf(target(player, 60));
+        beam(player, level, centre, Spell.METEOR_SHOWER);
+        Tasks.every(1, 4, 12, n -> {
+            double angle = level.getRandom().nextDouble() * Math.PI * 2, d = level.getRandom().nextDouble() * 6;
+            Vec3 hit = centre.add(Math.cos(angle) * d, 0, Math.sin(angle) * d);
+            Vec3 from = hit.add(-5 + level.getRandom().nextDouble() * 3, 28, -5 + level.getRandom().nextDouble() * 3);
+            Vec3 dir = hit.subtract(from).normalize();
+            var meteor = new net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball(level, player, dir, 2);
+            meteor.setPos(from);
+            meteor.setDeltaMovement(dir.scale(1.5));
+            level.addFreshEntity(meteor);
+            return true;
+        });
+    }
+
+    /** Chain Lightning: a bolt into what you look at, which leaps on to the nearest creature (within eight blocks), five times. */
+    static void chainLightning(ServerPlayer player, ServerLevel level) {
+        LivingEntity first = lookedAt(player, level, 40);
+        if (first == null) {
+            Vec3 at = Vec3.atCenterOf(target(player, 40));
+            beam(player, level, at, Spell.CHAIN_LIGHTNING);
+            zap(level, at, player, 4, false);
+            return;
+        }
+        List<LivingEntity> hit = new ArrayList<>();
+        Vec3[] from = {tip(player)};
+        LivingEntity[] next = {first};
+        Tasks.every(1, 3, 6, n -> {
+            LivingEntity target = next[0];
+            if (!target.isAlive()) return false;
+            Vec3 to = target.position().add(0, target.getBbHeight() / 2, 0);
+            Fx.beam(level, from[0], to, Spell.CHAIN_LIGHTNING.colour);
+            Fx.particles(level, ParticleTypes.ELECTRIC_SPARK, to, 20, 0.4, 0.3);
+            level.playSound(null, to.x, to.y, to.z, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.6f, 1.6f);
+            target.hurtServer(level, level.damageSources().indirectMagic(player, player), 6);
+            hit.add(target);
+            from[0] = to;
+            next[0] = level.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(8), e -> e != player && e.isAlive() && !hit.contains(e))
+                    .stream().min(Comparator.comparingDouble(e -> e.distanceToSqr(target))).orElse(null);
+            return next[0] != null;
+        });
+    }
+
+    /** Earthquake: rings of the ground jump up round you, wider and wider, and throw what stands on them in the air. */
+    static void earthquake(ServerPlayer player, ServerLevel level) {
+        BlockPos centre = player.blockPosition();
+        Tasks.every(1, 2, 9, n -> {
+            int r = n + 2;
+            for (int x = -r; x <= r; x++) for (int z = -r; z <= r; z++) {
+                double d = Math.sqrt(x * x + z * z);
+                if (d < r - 0.5 || d >= r + 0.5) continue;
+                BlockPos top = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centre.offset(x, 0, z)).below();
+                if (Math.abs(top.getY() - centre.getY()) > 4) continue;
+                BlockState state = level.getBlockState(top);
+                if (state.isAir() || state.hasBlockEntity() || state.getDestroySpeed(level, top) < 0 || !state.getFluidState().isEmpty()) continue;
+                FallingBlockEntity block = FallingBlockEntity.fall(level, top, state);
+                push(block, new Vec3(0, 0.35 + level.getRandom().nextDouble() * 0.15, 0));
+            }
+            for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(centre).inflate(r + 1, 3, r + 1), e -> e != player && e.isAlive())) {
+                double d = Math.sqrt(entity.distanceToSqr(Vec3.atBottomCenterOf(centre)));
+                if (d < r - 1 || d > r + 1) continue;
+                push(entity, entity.getDeltaMovement().add(0, 0.8, 0));
+                entity.hurtServer(level, level.damageSources().indirectMagic(player, player), 4);
+            }
+            level.playSound(null, centre.getX(), centre.getY(), centre.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.4f, 0.5f);
+            return true;
+        });
+    }
+
+    /** Tornado: a whirlwind that crosses the land the way you look for six seconds, picks up whatever it meets and throws it off. */
+    static void tornado(ServerPlayer player, ServerLevel level) {
+        Vec3 look = player.getLookAngle(), flat = new Vec3(look.x, 0, look.z);
+        Vec3 dir = flat.lengthSqr() < 1.0e-4 ? new Vec3(1, 0, 0) : flat.normalize();
+        Vec3[] centre = {player.position().add(dir.scale(4))};
+        Tasks.every(1, 1, 121, n -> {
+            Vec3 c = centre[0].add(dir.scale(0.2));
+            int ground = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) Math.floor(c.x), (int) Math.floor(c.z));
+            c = new Vec3(c.x, ground, c.z);
+            centre[0] = c;
+            for (int k = 0; k < 24; k++) {
+                double a = n * 0.6 + k * 0.8, radius = 0.4 + k * 0.12;
+                level.sendParticles(ParticleTypes.CLOUD, c.x + Math.cos(a) * radius, c.y + k * 0.35, c.z + Math.sin(a) * radius, 1, 0, 0, 0, 0);
+            }
+            if (n % 10 == 0) level.playSound(null, c.x, c.y, c.z, SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 1, 0.5f);
+            for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(c, c).inflate(4, 7, 4), e -> e != player && e.isAlive())) {
+                Vec3 in = new Vec3(c.x - entity.getX(), 0, c.z - entity.getZ());
+                Vec3 inward = in.lengthSqr() < 1.0e-4 ? Vec3.ZERO : in.normalize();
+                if (n >= 120) { // the end: off they fly
+                    push(entity, inward.scale(-1.5).add(0, 0.8, 0));
+                    continue;
+                }
+                Vec3 round = new Vec3(-inward.z, 0, inward.x);
+                push(entity, inward.scale(0.25).add(round.scale(0.6)).add(0, entity.getY() < c.y + 6 ? 0.35 : 0.05, 0));
+            }
+            return true;
+        });
     }
 
     /** A player leaves: their blood block and what they carry are let go. */

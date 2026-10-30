@@ -22,5 +22,9 @@
   "spell.empirewand.blood_block": "Blood Block",
   "spell.empirewand.lightning_storm": "Lightning Storm",
   "spell.empirewand.blood_wave": "Blood Wave",
-  "spell.empirewand.blood_spark": "Blood Spark"
+  "spell.empirewand.blood_spark": "Blood Spark",
+  "spell.empirewand.meteor_shower": "Meteor Shower",
+  "spell.empirewand.chain_lightning": "Chain Lightning",
+  "spell.empirewand.earthquake": "Earthquake",
+  "spell.empirewand.tornado": "Tornado"
 }

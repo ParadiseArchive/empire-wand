@@ -162,6 +162,7 @@ const SPELL_COLOURS = {
   explode: 0xF4F4F4, lightning_arrow: 0x00FFFF, escape: 0xFF5A1F, launch: 0x5A4BFF, leap: 0xB45CFF, confuse: 0x9A2A9A, capture: 0x3FE0A8,
   little_spark: 0xFFF27A, comet: 0xFFA500, spark: 0xFF3B3B, jump: 0xFF8C1A, poison_wave: 0x35D04A, explosive: 0x6A6A6A, blood_block: 0xC0102A,
   lightning_storm: 0x4FC8FF, blood_wave: 0xB00010, blood_spark: 0xD0182E,
+  meteor_shower: 0xFF6A00, chain_lightning: 0x9FD8FF, earthquake: 0x8B5A2B, tornado: 0xC8D0D8,
 };
 const WAVE = ['........', '..CC....', '.C..C..C', 'C....CC.', '........', '..CC....', '.C..C..C', 'C....CC.'];
 const BOLT = ['....CCC.', '...CCC..', '..CCC...', '.CCCCCC.', '....CC..', '...CC...', '..CC....', '.C......'];
@@ -183,6 +184,10 @@ const ICONS = {
   lightning_storm: ['.WWWW...', 'WWWWWWW.', 'WWWWWWWW', '...C....', '..CC....', '.CCCC...', '...C....', '..C.....'],
   blood_wave: WAVE,
   blood_spark: BOLT,
+  meteor_shower: ['C....C..', '.C....C.', '..W....W', '........', 'C....C..', '.C....C.', '..W....W', '........'],
+  chain_lightning: ['W.......', '.C......', '..C...W.', '...C.C..', '....C...', '.....C..', '......C.', '.......W'],
+  earthquake: ['........', '........', '........', 'C.C..C.C', '.CCCCCC.', 'CDDCCDDC', 'DDDDDDDD', 'DDDDDDDD'],
+  tornado: ['CCCCCCCC', '.CCCCCC.', '..CCCCC.', '...CCC..', '...CCC..', '....CC..', '....C...', '...C....'],
 };
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 const darker = (n) => hex(((n >> 16 & 255) * 0.6 << 16) | ((n >> 8 & 255) * 0.6 << 8) | ((n & 255) * 0.6));
@@ -203,6 +208,7 @@ const SPELLS = {
   confuse: 'Confuse', capture: 'Capture', little_spark: 'Little Spark', comet: 'Comet', spark: 'Spark', jump: 'Jump',
   poison_wave: 'Poison Wave', explosive: 'Explosive', blood_block: 'Blood Block', lightning_storm: 'Lightning Storm',
   blood_wave: 'Blood Wave', blood_spark: 'Blood Spark',
+  meteor_shower: 'Meteor Shower', chain_lightning: 'Chain Lightning', earthquake: 'Earthquake', tornado: 'Tornado',
 };
 json(join(ASSETS, 'lang/en_us.json'), {
   'itemGroup.empirewand': 'Empire Wand',
