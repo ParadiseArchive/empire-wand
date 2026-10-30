@@ -3,6 +3,8 @@
   "item.empirewand.empire_wand": "Empire Wand",
   "item.empirewand.blood_magic": "Blood Magic",
   "message.empirewand.selected": "[X] Selected: %s",
+  "key.empirewand.wheel": "Spell wheel (with a wand in hand)",
+  "screen.empirewand.wheel": "Spell wheel",
   "spell.empirewand.explode": "Explode",
   "spell.empirewand.lightning_arrow": "Lightning Arrow",
   "spell.empirewand.escape": "Escape",

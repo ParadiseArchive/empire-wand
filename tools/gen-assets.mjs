@@ -156,6 +156,41 @@ for (const [name, wand] of Object.entries(WANDS)) {
   });
 }
 
+// ---------- spell icons for the wheel: 8 x 8 pictures, drawn twice the size, in the spell's colour ----------
+// C the spell's colour, D a darker shade of it, W white
+const SPELL_COLOURS = {
+  explode: 0xF4F4F4, lightning_arrow: 0x00FFFF, escape: 0xFF5A1F, launch: 0x5A4BFF, leap: 0xB45CFF, confuse: 0x9A2A9A, capture: 0x3FE0A8,
+  little_spark: 0xFFF27A, comet: 0xFFA500, spark: 0xFF3B3B, jump: 0xFF8C1A, poison_wave: 0x35D04A, explosive: 0x6A6A6A, blood_block: 0xC0102A,
+  lightning_storm: 0x4FC8FF, blood_wave: 0xB00010, blood_spark: 0xD0182E,
+};
+const WAVE = ['........', '..CC....', '.C..C..C', 'C....CC.', '........', '..CC....', '.C..C..C', 'C....CC.'];
+const BOLT = ['....CCC.', '...CCC..', '..CCC...', '.CCCCCC.', '....CC..', '...CC...', '..CC....', '.C......'];
+const ICONS = {
+  explode: ['..W..W..', '.W.CC.W.', '..CWWC..', 'WCWWWWCW', 'WCWWWWCW', '..CWWC..', '.W.CC.W.', '..W..W..'],
+  lightning_arrow: ['....CCCC', '......CC', '.....C.C', '....C..C', '..WC....', '.WCW....', 'W.W.....', 'W.......'],
+  escape: ['....CCCC', '......CC', '.....C.C', '....C..C', '...C....', 'WW......', 'WCW.....', '.W......'],
+  launch: ['...CC...', '..CCCC..', '.C.CC.C.', '...CC...', '...CC...', '...CC...', '........', 'WWWWWWWW'],
+  leap: ['.....CC.', '....CCCC', '...C.CC.', '..C.....', '.C......', 'W.......', 'W.W.....', '........'],
+  confuse: ['.CCCCC..', 'C.....C.', 'C.CCC.C.', 'C.C.C.C.', 'C.C...C.', 'C.CCCCC.', 'C.......', '.CCCCCC.'],
+  capture: ['C.C.C...', 'C.C.C.C.', 'CCCCC.C.', 'CCCCCCC.', 'CCCCCC..', '.CCCC...', '..CC....', '..CC....'],
+  little_spark: ['........', '...C....', '..CWC...', '.CWWWC..', '..CWC...', '...C....', '......C.', '........'],
+  comet: ['......CC', '.....CWC', '....CWWC', '...CCCC.', '..D.C...', '.D.D....', 'D.D.....', '.D......'],
+  spark: BOLT,
+  jump: ['...CC...', '..CCCC..', '.C.CC.C.', '...CC...', '..CCCC..', '.C.CC.C.', '...CC...', 'W.WWWW.W'],
+  poison_wave: WAVE,
+  explosive: ['......W.', '.....W..', '...CCC..', '..CCCCC.', '.CCWCCCC', '.CWCCCCC', '.CCCCCCC', '..CCCCC.'],
+  blood_block: ['...CC...', '.CCWWCC.', 'CWWWWWWC', 'CCCWWCCD', 'CCCCCDDD', 'CCCCCDDD', '.CCCCDD.', '...CD...'],
+  lightning_storm: ['.WWWW...', 'WWWWWWW.', 'WWWWWWWW', '...C....', '..CC....', '.CCCC...', '...C....', '..C.....'],
+  blood_wave: WAVE,
+  blood_spark: BOLT,
+};
+const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+const darker = (n) => hex(((n >> 16 & 255) * 0.6 << 16) | ((n >> 8 & 255) * 0.6 << 8) | ((n & 255) * 0.6));
+for (const [id, rows] of Object.entries(ICONS)) {
+  const key = { C: hex(SPELL_COLOURS[id]), D: darker(SPELL_COLOURS[id]), W: '#ffffff' };
+  picture('gui/spell/' + id, rows.flatMap((row) => { const wide = [...row].flatMap((c) => [c, c]).join(''); return [wide, wide]; }), key);
+}
+
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
@@ -174,6 +209,8 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'item.empirewand.blood_magic': 'Blood Magic',
   'message.empirewand.selected': '[X] Selected: %s',
+  'key.empirewand.wheel': 'Spell wheel (with a wand in hand)',
+  'screen.empirewand.wheel': 'Spell wheel',
   ...Object.fromEntries(Object.entries(SPELLS).map(([id, name]) => ['spell.empirewand.' + id, name])),
 });
 console.log('assets written');
