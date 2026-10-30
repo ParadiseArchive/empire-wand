@@ -1,0 +1,101 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'idea'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+// One mod, several Minecraft versions: -Pmc=26.1 builds for 26.1.2, without it the build is for 26.3.
+// versions/<mc>/gradle.properties holds the Minecraft and NeoForge versions, versions/<mc>/java the few
+// classes that differ between them. Everything else in src is shared.
+def mc = project.mc
+def mcProps = new Properties()
+file("versions/${mc}/gradle.properties").withInputStream { mcProps.load(it) }
+mcProps.each { key, value -> project.ext.set(key, value) }
+def mainMc = mc == '26.3' // the newest version keeps the usual build and run folders
+if (!mainMc) layout.buildDirectory = file("build-${mc}")
+
+version = "${mod_version}+mc${minecraft_version}"
+group = mod_group_id
+
+sourceSets.main.java.srcDir("versions/${mc}/java")
+
+repositories {
+    mavenCentral()
+}
+
+base {
+    archivesName = mod_id
+}
+
+// Mojang ships Java 25 to end users since 26.1, so mods should target Java 25.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // Launches a GameTestServer, runs all of Empire Wand's game tests, then exits.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        configureEach {
+            // each Minecraft version plays in its own folder, so worlds do not mix
+            if (!mainMc) gameDirectory = project.file("run-${mc}")
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+// Fills in the mod metadata (neoforge.mods.toml) from gradle.properties and versions/<mc>/gradle.properties.
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
