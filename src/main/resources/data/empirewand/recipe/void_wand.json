@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "E": "minecraft:ender_eye",
+    "B": "minecraft:breeze_rod",
+    "O": "minecraft:crying_obsidian"
+  },
+  "pattern": [
+    "  E",
+    " B ",
+    "O  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "empirewand:void_wand"
+  }
+}

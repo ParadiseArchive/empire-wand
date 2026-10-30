@@ -2,6 +2,9 @@
   "itemGroup.empirewand": "Empire Wand",
   "item.empirewand.empire_wand": "Empire Wand",
   "item.empirewand.blood_magic": "Blood Magic",
+  "item.empirewand.frost_wand": "Frost Wand",
+  "item.empirewand.void_wand": "Void Wand",
+  "item.empirewand.nature_wand": "Nature Wand",
   "message.empirewand.selected": "[X] Selected: %s",
   "message.empirewand.no_blood": "Not enough blood left to give.",
   "key.empirewand.wheel": "Spell wheel (with a wand in hand)",
@@ -26,5 +29,14 @@
   "spell.empirewand.meteor_shower": "Meteor Shower",
   "spell.empirewand.chain_lightning": "Chain Lightning",
   "spell.empirewand.earthquake": "Earthquake",
-  "spell.empirewand.tornado": "Tornado"
+  "spell.empirewand.tornado": "Tornado",
+  "spell.empirewand.ice_wave": "Ice Wave",
+  "spell.empirewand.freeze": "Freeze",
+  "spell.empirewand.blizzard": "Blizzard",
+  "spell.empirewand.blink": "Blink",
+  "spell.empirewand.black_hole": "Black Hole",
+  "spell.empirewand.levitate": "Levitate",
+  "spell.empirewand.roots": "Roots",
+  "spell.empirewand.spores": "Spores",
+  "spell.empirewand.overgrowth": "Overgrowth"
 }

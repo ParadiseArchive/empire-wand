@@ -47,7 +47,7 @@ public final class WandGameTests {
         test("capture_picks_it_up_and_throws_it", WandGameTests::capturePicksItUpAndThrowsIt, 20);
         test("confuse_makes_it_dizzy", WandGameTests::confuseMakesItDizzy, 20);
         test("blood_magic_costs_blood", WandGameTests::bloodMagicCostsBlood, 20);
-        test("every_spell_casts", WandGameTests::everySpellCasts, 400);
+        test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
     private WandGameTests() {}

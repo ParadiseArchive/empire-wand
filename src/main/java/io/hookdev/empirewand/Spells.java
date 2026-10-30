@@ -109,6 +109,15 @@ public final class Spells {
             case CHAIN_LIGHTNING -> chainLightning(player, level);
             case EARTHQUAKE -> earthquake(player, level);
             case TORNADO -> tornado(player, level);
+            case ICE_WAVE -> iceWave(player, level);
+            case FREEZE -> freeze(player, level);
+            case BLIZZARD -> blizzard(player, level);
+            case BLINK -> blink(player, level);
+            case BLACK_HOLE -> blackHole(player, level);
+            case LEVITATE -> levitate(player, level);
+            case ROOTS -> roots(player, level);
+            case SPORES -> spores(player, level);
+            case OVERGROWTH -> overgrowth(player, level);
             case JUMP -> jump(player, level);
             case CAPTURE -> capture(player, level);
         }
@@ -131,6 +140,10 @@ public final class Spells {
             case CHAIN_LIGHTNING -> SoundEvents.EVOKER_PREPARE_ATTACK;
             case EARTHQUAKE -> SoundEvents.RAVAGER_ROAR;
             case TORNADO -> SoundEvents.PHANTOM_FLAP;
+            case ICE_WAVE, FREEZE, BLIZZARD -> SoundEvents.GLASS_BREAK;
+            case BLINK, LEVITATE -> SoundEvents.ENDERMAN_TELEPORT;
+            case BLACK_HOLE -> SoundEvents.END_PORTAL_FRAME_FILL;
+            case ROOTS, SPORES, OVERGROWTH -> SoundEvents.GRASS_BREAK;
         };
     }
 
@@ -636,6 +649,174 @@ public final class Spells {
             }
             return true;
         });
+    }
+
+    // ---------- the Frost Wand ----------
+
+    /** Ice Wave: a wave of cold along your look: water freezes (for a while), what it passes is slowed and frozen. */
+    static void iceWave(ServerPlayer player, ServerLevel level) {
+        Vec3 eye = player.getEyePosition(), look = player.getLookAngle();
+        Tasks.every(1, 1, 20, n -> {
+            Vec3 at = eye.add(look.scale(1 + n));
+            Fx.particles(level, ParticleTypes.SNOWFLAKE, at, 15, 0.6, 0.02);
+            for (BlockPos pos : BlockPos.betweenClosed(BlockPos.containing(at).offset(-1, -3, -1), BlockPos.containing(at).offset(1, 0, 1))) {
+                if (level.getBlockState(pos).is(Blocks.WATER) && level.getFluidState(pos).isSource() && level.getBlockState(pos.above()).isAir()) {
+                    level.setBlock(pos, Blocks.FROSTED_ICE.defaultBlockState(), 3);
+                    level.scheduleTick(pos, Blocks.FROSTED_ICE, 60 + level.getRandom().nextInt(60)); // it melts again
+                }
+            }
+            for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(1.5, 2.5, 1.5), e -> e != player && e.isAlive())) {
+                entity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 3));
+                entity.setTicksFrozen(Math.max(entity.getTicksFrozen(), entity.getTicksRequiredToFreeze() + 60));
+                entity.hurtServer(level, level.damageSources().freeze(), 3);
+            }
+            return true;
+        });
+    }
+
+    /** Freeze: what you look at freezes solid: it cannot move, and the cold bites for a while. */
+    static void freeze(ServerPlayer player, ServerLevel level) {
+        LivingEntity target = lookedAt(player, level, 40);
+        Vec3 at = target != null ? target.position().add(0, target.getBbHeight() / 2, 0) : Vec3.atCenterOf(target(player, 40));
+        beam(player, level, at, Spell.FREEZE);
+        Fx.particles(level, ParticleTypes.SNOWFLAKE, at, 40, 0.6, 0.05);
+        if (target == null) return;
+        target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 9));
+        target.setTicksFrozen(target.getTicksRequiredToFreeze() + 300);
+        Fx.blockDust(level, target.blockPosition(), Blocks.ICE.defaultBlockState());
+    }
+
+    /** Blizzard: eight seconds of snowstorm round where you look: everything in it slows and freezes, snow settles. */
+    static void blizzard(ServerPlayer player, ServerLevel level) {
+        Vec3 centre = Vec3.atCenterOf(target(player, 50)).add(0, 0.5, 0);
+        beam(player, level, centre, Spell.BLIZZARD);
+        Tasks.every(1, 2, 80, n -> {
+            level.sendParticles(ParticleTypes.SNOWFLAKE, centre.x, centre.y + 5, centre.z, 40, 6, 1.5, 6, 0.02);
+            level.sendParticles(ParticleTypes.CLOUD, centre.x, centre.y + 6.5, centre.z, 6, 5, 0.3, 5, 0);
+            for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(centre, centre).inflate(6, 4, 6), e -> e != player && e.isAlive())) {
+                entity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 2));
+                entity.setTicksFrozen(Math.min(entity.getTicksFrozen() + 8, entity.getTicksRequiredToFreeze() + 100));
+            }
+            if (n % 5 == 0) for (int i = 0; i < 4; i++) { // snow settles
+                BlockPos top = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, BlockPos.containing(centre.add(level.getRandom().nextInt(13) - 6, 0, level.getRandom().nextInt(13) - 6)));
+                BlockState snow = Blocks.SNOW.defaultBlockState();
+                if (level.isEmptyBlock(top) && snow.canSurvive(level, top)) level.setBlock(top, snow, 3);
+            }
+            return true;
+        });
+    }
+
+    // ---------- the Void Wand ----------
+
+    /** Blink: you are where you look (up to forty blocks), in a flash. */
+    static void blink(ServerPlayer player, ServerLevel level) {
+        HitResult hit = player.pick(40, 1, false);
+        Vec3 to = hit.getLocation().subtract(player.getLookAngle().scale(0.5));
+        BlockPos spot = BlockPos.containing(to);
+        for (int up = 0; up < 3 && !(level.getBlockState(spot).isAir() && level.getBlockState(spot.above()).isAir()); up++) spot = spot.above();
+        teleportFx(level, player.position().add(0, 1, 0));
+        player.teleportTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5);
+        player.resetFallDistance();
+        landSafely(player);
+        teleportFx(level, player.position().add(0, 1, 0));
+    }
+
+    /** Black Hole: a dark swirl where you look pulls everything within ten blocks in for four seconds, then bursts. */
+    static void blackHole(ServerPlayer player, ServerLevel level) {
+        Vec3 centre = Vec3.atCenterOf(target(player, 40)).add(0, 1.5, 0);
+        beam(player, level, centre, Spell.BLACK_HOLE);
+        Tasks.every(1, 1, 81, n -> {
+            if (n == 80) {
+                level.explode(null, centre.x, centre.y, centre.z, 4, false, Level.ExplosionInteraction.TNT);
+                Fx.firework(level, centre, Shape.LARGE_BALL, new int[] {0x4A1A70, Fx.BLACK}, new int[] {Fx.PURPLE}, true, true);
+                return false;
+            }
+            level.sendParticles(ParticleTypes.SQUID_INK, centre.x, centre.y, centre.z, 6, 0.3, 0.3, 0.3, 0);
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, centre.x, centre.y, centre.z, 12, 2.5, 2.5, 2.5, 0.05);
+            if (n % 20 == 0) level.playSound(null, centre.x, centre.y, centre.z, SoundEvents.PORTAL_AMBIENT, SoundSource.PLAYERS, 1, 0.5f);
+            for (Entity entity : level.getEntities(player, new AABB(centre, centre).inflate(10), e -> e.isAlive() && !(e instanceof FallingBlockEntity))) {
+                Vec3 in = centre.subtract(entity.position());
+                if (in.lengthSqr() > 100 || in.lengthSqr() < 0.25) continue;
+                push(entity, entity.getDeltaMovement().scale(0.5).add(in.normalize().scale(0.35)));
+            }
+            return true;
+        });
+    }
+
+    /** Levitate: what stands within four blocks of where you look floats up, and so does the ground there, for a few seconds. */
+    static void levitate(ServerPlayer player, ServerLevel level) {
+        BlockPos centre = target(player, 40);
+        beam(player, level, Vec3.atCenterOf(centre), Spell.LEVITATE);
+        for (LivingEntity entity : near(level, Vec3.atCenterOf(centre), 4, player)) entity.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 100, 1));
+        int lifted = 0;
+        for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-2, -1, -2), centre.offset(2, 1, 2))) {
+            if (lifted >= 12) break;
+            BlockState state = level.getBlockState(pos);
+            if (state.isAir() || state.hasBlockEntity() || state.getDestroySpeed(level, pos) < 0 || !state.getFluidState().isEmpty() || !level.getBlockState(pos.above()).isAir()) continue;
+            FallingBlockEntity block = FallingBlockEntity.fall(level, pos.immutable(), state);
+            block.setNoGravity(true);
+            lifted++;
+            Tasks.every(1, 1, 61, n -> {
+                if (!block.isAlive()) return false;
+                block.time = 1;
+                if (n >= 60) { // down they come
+                    block.setNoGravity(false);
+                    return false;
+                }
+                push(block, new Vec3(0, 0.06, 0));
+                return true;
+            });
+        }
+        Fx.particles(level, ParticleTypes.REVERSE_PORTAL, Vec3.atCenterOf(centre), 40, 2, 0.05);
+    }
+
+    // ---------- the Nature Wand ----------
+
+    /** Roots: roots grab what stands within three blocks of where you look: it cannot move or jump for five seconds. */
+    static void roots(ServerPlayer player, ServerLevel level) {
+        Vec3 at = targetEntity(player, 40);
+        beam(player, level, at, Spell.ROOTS);
+        for (LivingEntity entity : near(level, at, 3, player)) {
+            entity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 9));
+            entity.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 100, 128)); // a negative jump: none at all
+            Fx.blockDust(level, entity.blockPosition(), Blocks.MANGROVE_ROOTS.defaultBlockState());
+            Tasks.every(5, 10, 10, n -> {
+                if (!entity.isAlive()) return false;
+                Fx.blockDust(level, entity.blockPosition(), Blocks.MANGROVE_ROOTS.defaultBlockState());
+                return true;
+            });
+        }
+    }
+
+    /** Spores: a poisonous cloud of spores where you look, for ten seconds. */
+    static void spores(ServerPlayer player, ServerLevel level) {
+        Vec3 at = targetEntity(player, 40);
+        beam(player, level, at, Spell.SPORES);
+        var cloud = new net.minecraft.world.entity.AreaEffectCloud(level, at.x, at.y, at.z);
+        cloud.setOwner(player);
+        cloud.setRadius(4);
+        cloud.setDuration(200);
+        cloud.setWaitTime(0);
+        cloud.setCustomParticle(ParticleTypes.SPORE_BLOSSOM_AIR);
+        cloud.addEffect(new MobEffectInstance(MobEffects.POISON, 100, 1));
+        cloud.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0));
+        level.addFreshEntity(cloud);
+    }
+
+    /** Overgrowth: everything within five blocks of where you look grows: grass, flowers, crops, saplings into trees. */
+    static void overgrowth(ServerPlayer player, ServerLevel level) {
+        BlockPos centre = target(player, 40);
+        beam(player, level, Vec3.atCenterOf(centre), Spell.OVERGROWTH);
+        ItemStack meal = new ItemStack(Items.BONE_MEAL, 64);
+        for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-5, -2, -5), centre.offset(5, 2, 5))) {
+            if (pos.distSqr(centre) > 25) continue;
+            for (int i = 0; i < 3; i++) {
+                if (!net.minecraft.world.item.BoneMealItem.growCrop(meal, level, pos.immutable())) break;
+                level.levelEvent(1505, pos, 15);
+            }
+            if (meal.isEmpty()) meal = new ItemStack(Items.BONE_MEAL, 64);
+        }
+        Fx.particles(level, ParticleTypes.HAPPY_VILLAGER, Vec3.atCenterOf(centre), 40, 3, 0);
     }
 
     /** A player leaves: their blood block and what they carry are let go. */

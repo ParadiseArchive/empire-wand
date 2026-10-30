@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "minecraft:packed_ice",
+    "B": "minecraft:breeze_rod",
+    "S": "minecraft:snowball"
+  },
+  "pattern": [
+    "  P",
+    " B ",
+    "S  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "empirewand:frost_wand"
+  }
+}

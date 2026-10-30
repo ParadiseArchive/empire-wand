@@ -24,6 +24,9 @@ public final class Content {
 
     public static final DeferredItem<WandItem> EMPIRE_WAND = ITEMS.registerItem("empire_wand", p -> new WandItem(p, Spell.EMPIRE), p -> p.stacksTo(1));
     public static final DeferredItem<WandItem> BLOOD_MAGIC = ITEMS.registerItem("blood_magic", p -> new WandItem(p, Spell.BLOOD), p -> p.stacksTo(1));
+    public static final DeferredItem<WandItem> FROST_WAND = ITEMS.registerItem("frost_wand", p -> new WandItem(p, Spell.FROST), p -> p.stacksTo(1));
+    public static final DeferredItem<WandItem> VOID_WAND = ITEMS.registerItem("void_wand", p -> new WandItem(p, Spell.VOID), p -> p.stacksTo(1));
+    public static final DeferredItem<WandItem> NATURE_WAND = ITEMS.registerItem("nature_wand", p -> new WandItem(p, Spell.NATURE), p -> p.stacksTo(1));
 
     static {
         TABS.register("wands", () -> CreativeModeTab.builder()
@@ -32,6 +35,9 @@ public final class Content {
                 .displayItems((parameters, output) -> {
                     output.accept(EMPIRE_WAND.get());
                     output.accept(BLOOD_MAGIC.get());
+                    output.accept(FROST_WAND.get());
+                    output.accept(VOID_WAND.get());
+                    output.accept(NATURE_WAND.get());
                 })
                 .build());
     }
