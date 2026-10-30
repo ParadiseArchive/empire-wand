@@ -22,7 +22,7 @@ public record CastSpell() implements CustomPacketPayload {
 
     public static void handle(CastSpell message, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player && player.getMainHandItem().getItem() instanceof WandItem wand && player.isAlive()) {
-            Spells.cast(player, wand.spell(player.getMainHandItem()));
+            Spells.cast(player, wand.spell(player.getMainHandItem()), wand == Content.BLOOD_MAGIC.get());
         }
     }
 }

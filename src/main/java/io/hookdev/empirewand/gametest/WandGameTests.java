@@ -46,6 +46,7 @@ public final class WandGameTests {
         test("blood_block_takes_two_clicks", WandGameTests::bloodBlockTakesTwoClicks, 100);
         test("capture_picks_it_up_and_throws_it", WandGameTests::capturePicksItUpAndThrowsIt, 20);
         test("confuse_makes_it_dizzy", WandGameTests::confuseMakesItDizzy, 20);
+        test("blood_magic_costs_blood", WandGameTests::bloodMagicCostsBlood, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 400);
     }
 
@@ -156,6 +157,19 @@ public final class WandGameTests {
         player.snapTo(player.getX(), player.getY(), player.getZ(), -90, 25);
         Spells.cast(player, Spell.CONFUSE);
         helper.assertTrue(pig.hasEffect(net.minecraft.world.effect.MobEffects.NAUSEA), "the pig is dizzy");
+        helper.succeed();
+    }
+
+    private static void bloodMagicCostsBlood(GameTestHelper helper) {
+        wall(helper);
+        ServerPlayer player = caster(helper);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL); // in creative blood is free
+        float full = player.getHealth();
+        Spells.cast(player, Spell.BLOOD_SPARK, true);
+        helper.assertTrue(full - player.getHealth() == Spells.BLOOD_PRICE, "half a heart, it cost " + (full - player.getHealth()));
+        player.setHealth(Spells.BLOOD_PRICE);
+        Spells.cast(player, Spell.BLOOD_SPARK, true);
+        helper.assertTrue(player.isAlive() && player.getHealth() == Spells.BLOOD_PRICE, "with half a heart left: no blood to give, and alive");
         helper.succeed();
     }
 

@@ -209,6 +209,7 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'item.empirewand.blood_magic': 'Blood Magic',
   'message.empirewand.selected': '[X] Selected: %s',
+  'message.empirewand.no_blood': 'Not enough blood left to give.',
   'key.empirewand.wheel': 'Spell wheel (with a wand in hand)',
   'screen.empirewand.wheel': 'Spell wheel',
   ...Object.fromEntries(Object.entries(SPELLS).map(([id, name]) => ['spell.empirewand.' + id, name])),

@@ -54,13 +54,46 @@ public final class Spells {
     private Spells() {}
 
     public static void cast(ServerPlayer player, Spell spell) {
+        cast(player, spell, false);
+    }
+
+    /**
+     * Casts a spell. From Blood Magic (owner, 31 Oct 2026) every spell costs half a heart, and hits much harder for it;
+     * with half a heart left there is no blood to give.
+     */
+    public static void cast(ServerPlayer player, Spell spell, boolean blood) {
         ServerLevel level = (ServerLevel) player.level();
+        if (blood && !player.getAbilities().instabuild) {
+            if (player.getHealth() <= BLOOD_PRICE) {
+                player.sendOverlayMessage(Component.translatable("message.empirewand.no_blood").withStyle(net.minecraft.ChatFormatting.DARK_RED));
+                level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.6f, 1.5f);
+                return;
+            }
+            // straight off its health: a hit would make it untouchable for half a second, and spamming would be free
+            player.setHealth(player.getHealth() - BLOOD_PRICE);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_HURT, SoundSource.PLAYERS, 0.6f, 0.8f);
+        }
+        if (blood) Fx.particles(level, new net.minecraft.core.particles.DustParticleOptions(0x8B0000, 1.2f), player.position().add(0, 1, 0), 16, 0.4, 0);
+        BLOOD.set(blood);
+        try {
+            castNow(player, spell, level);
+        } finally {
+            BLOOD.set(false);
+        }
+    }
+
+    /** Half a heart. */
+    public static final float BLOOD_PRICE = 1;
+    /** Cast from Blood Magic (stronger): set while the spell is cast. */
+    private static final ThreadLocal<Boolean> BLOOD = ThreadLocal.withInitial(() -> false);
+
+    private static void castNow(ServerPlayer player, Spell spell, ServerLevel level) {
         level.playSound(null, player.getX(), player.getY(), player.getZ(), castSound(spell), SoundSource.PLAYERS, 0.8f, 1);
         switch (spell) {
             case EXPLODE -> explode(player, level);
             case SPARK -> spark(player, level, spell, Fx.BLACK, Fx.RED, 3);
             case LITTLE_SPARK -> spark(player, level, spell, Fx.WHITE, Fx.RED, 5);
-            case BLOOD_SPARK -> spark(player, level, spell, 0x3D0000, 0x3D0000, 3);
+            case BLOOD_SPARK -> spark(player, level, spell, 0x3D0000, 0x3D0000, BLOOD.get() ? 7 : 3);
             case LEAP -> leap(player, level);
             case LAUNCH -> launch(player, level);
             case COMET -> fireball(player, level, false);
@@ -322,6 +355,7 @@ public final class Spells {
      * and at whatever you look at then, where it blows up.
      */
     static void bloodBlock(ServerPlayer player, ServerLevel level) {
+        float power = BLOOD.get() ? 7 : 5; // from Blood Magic it is bigger
         BlockPos armed = BLOOD_BLOCKS.remove(player.getUUID());
         if (armed == null || !level.getBlockState(armed).is(Blocks.REDSTONE_BLOCK)) { // the first click
             BlockPos at = target(player, 50);
@@ -362,7 +396,7 @@ public final class Spells {
                 block.time = 1; // keep it in the air as long as it flies
                 return true;
             }
-            level.explode(null, last[0].x, last[0].y, last[0].z, 5, false, Level.ExplosionInteraction.TNT);
+            level.explode(null, last[0].x, last[0].y, last[0].z, power, false, Level.ExplosionInteraction.TNT);
             block.discard();
             return false;
         });
@@ -389,13 +423,14 @@ public final class Spells {
 
     /** Blood Wave: a wave of blood along your look (from three blocks out), a zap and a dark red burst every third block. */
     static void bloodWave(ServerPlayer player, ServerLevel level) {
+        float damage = BLOOD.get() ? 6 : 3;
         Vec3 eye = player.getEyePosition(), look = player.getLookAngle();
         BlockState wire = Blocks.REDSTONE_WIRE.defaultBlockState();
         Tasks.every(1, 1, 31, n -> {
             BlockPos at = BlockPos.containing(eye.add(look.scale(3 + n)));
             for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) Fx.blockDust(level, at.offset(dx, dy, 0), wire);
             if ((n + 1) % 3 == 0) {
-                zap(level, Vec3.atCenterOf(at), player, 3, false);
+                zap(level, Vec3.atCenterOf(at), player, damage, false);
                 Fx.firework(level, Vec3.atCenterOf(at), Shape.BURST, 0x400000, Fx.BLACK, false, true);
             }
             return true;
