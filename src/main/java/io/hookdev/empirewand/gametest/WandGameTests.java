@@ -95,7 +95,7 @@ public final class WandGameTests {
         helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "a new wand starts on Explode");
         helper.assertTrue(item.next(wand, player) == Spell.LIGHTNING_ARROW, "then Lightning Arrow, as in the plugin");
         for (int i = 1; i < Spell.EMPIRE.size(); i++) item.next(wand, player);
-        helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "seventeen clicks: round to Explode again");
+        helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "once round all its spells: Explode again");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.BLOOD_MAGIC.get()));
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.assertTrue(Content.BLOOD_MAGIC.get().spell(player.getMainHandItem()) == Spell.BLOOD_SPARK, "Blood Magic: Blood Wave, then Blood Spark");

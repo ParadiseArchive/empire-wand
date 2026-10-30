@@ -101,8 +101,8 @@ shaped('blood_magic', ['  W', ' B ', 'R  '], { W: 'minecraft:nether_wart', B: 'm
 
 // ---------- English ----------
 const SPELLS = {
-  explode: 'Explode', lightning_arrow: 'Lightning Arrow', escape: 'Escape', launch: 'Launch', flamethrower: 'Flamethrower', leap: 'Leap',
-  ender_egg: 'Ender Egg', confuse: 'Confuse', capture: 'Capture', little_spark: 'Little Spark', comet: 'Comet', spark: 'Spark', jump: 'Jump',
+  explode: 'Explode', lightning_arrow: 'Lightning Arrow', escape: 'Escape', launch: 'Launch', leap: 'Leap',
+  confuse: 'Confuse', capture: 'Capture', little_spark: 'Little Spark', comet: 'Comet', spark: 'Spark', jump: 'Jump',
   poison_wave: 'Poison Wave', explosive: 'Explosive', blood_block: 'Blood Block', lightning_storm: 'Lightning Storm',
   blood_wave: 'Blood Wave', blood_spark: 'Blood Spark',
 };
@@ -111,7 +111,6 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'item.empirewand.blood_magic': 'Blood Magic',
   'message.empirewand.selected': '[X] Selected: %s',
-  'message.empirewand.ender_egg': '[X] Can you fly? Sneak to steer where you look. Cast it again to get off.',
   ...Object.fromEntries(Object.entries(SPELLS).map(([id, name]) => ['spell.empirewand.' + id, name])),
 });
 console.log('assets written');

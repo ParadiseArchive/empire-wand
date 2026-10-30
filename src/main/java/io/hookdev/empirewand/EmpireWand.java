@@ -7,7 +7,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityMountEvent;
 import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -30,13 +29,9 @@ public class EmpireWand {
         // spells that take a while run on the server's clock
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> Tasks.tick());
         NeoForge.EVENT_BUS.addListener((ServerStoppedEvent event) -> Tasks.clear());
-        // no fall damage after Leap, Jump, Escape and a ride on the Ender Egg
+        // no fall damage after Leap, Jump and Escape
         NeoForge.EVENT_BUS.addListener((LivingFallEvent event) -> {
             if (event.getEntity() instanceof Player player && Spells.landsSafely(player)) event.setCanceled(true);
-        });
-        // sneaking on the Ender Egg steers it instead of getting off
-        NeoForge.EVENT_BUS.addListener((EntityMountEvent event) -> {
-            if (event.isDismounting() && Spells.ridingEgg(event.getEntityMounting(), event.getEntityBeingMounted())) event.setCanceled(true);
         });
         NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> Spells.forget(event.getEntity()));
     }

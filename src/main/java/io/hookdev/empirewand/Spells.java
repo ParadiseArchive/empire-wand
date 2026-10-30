@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -30,10 +29,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.FireworkExplosion.Shape;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -49,12 +46,10 @@ import org.jspecify.annotations.Nullable;
 public final class Spells {
     /** Blood Block: the block a player's first click turned to redstone; the second click throws it. */
     private static final Map<UUID, BlockPos> BLOOD_BLOCKS = new HashMap<>();
-    /** Players who land without fall damage (Leap, Jump, Escape, the Ender Egg), until this game time. */
+    /** Players who land without fall damage (Leap, Jump, Escape), until this game time. */
     private static final Map<UUID, Long> SAFE_LANDING = new HashMap<>();
     /** What each player carries above their head (Capture). */
     private static final Map<UUID, LivingEntity> CARRIED = new HashMap<>();
-    /** The Ender Egg each player rides. */
-    private static final Map<UUID, FallingBlockEntity> EGGS = new HashMap<>();
 
     private Spells() {}
 
@@ -65,7 +60,6 @@ public final class Spells {
             case SPARK -> spark(player, level, Fx.BLACK, Fx.RED, 3);
             case LITTLE_SPARK -> spark(player, level, Fx.WHITE, Fx.RED, 5);
             case BLOOD_SPARK -> spark(player, level, 0x3D0000, 0x3D0000, 3);
-            case FLAMETHROWER -> flamethrower(player, level);
             case LEAP -> leap(player, level);
             case LAUNCH -> launch(player, level);
             case COMET -> fireball(player, level, false);
@@ -77,7 +71,6 @@ public final class Spells {
             case CONFUSE -> confuse(player, level);
             case POISON_WAVE -> poisonWave(player, level);
             case BLOOD_WAVE -> bloodWave(player, level);
-            case ENDER_EGG -> enderEgg(player, level);
             case JUMP -> jump(player, level);
             case CAPTURE -> capture(player, level);
         }
@@ -161,18 +154,6 @@ public final class Spells {
         Vec3 at = Vec3.atCenterOf(target(player, 50));
         Fx.firework(level, at, Shape.BURST, colour, fade, colour == 0x3D0000, true);
         zap(level, at, player, damage, false);
-    }
-
-    /** Flamethrower: twelve seconds of fire wherever you look (up to 150 blocks), and you do not burn. */
-    static void flamethrower(ServerPlayer player, ServerLevel level) {
-        player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 251, 10));
-        Tasks.every(2, 1, 251, n -> {
-            if (!player.isAlive() || player.hasDisconnected()) return false;
-            BlockPos fire = target(player, 150).above();
-            if (level.isEmptyBlock(fire)) level.setBlock(fire, BaseFireBlock.getState(level, fire), 11);
-            if (n % 5 == 0) level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GHAST_SHOOT, SoundSource.PLAYERS, 0.6f, 1);
-            return true;
-        });
     }
 
     /** Leap: off you fly where you look, with an ender trail, and land without a scratch. */
@@ -387,62 +368,6 @@ public final class Spells {
         });
     }
 
-    /**
-     * Ender Egg: you ride a dragon egg up into the air. Sneak to fly the way you look; cast it again to get off (the
-     * plugin's egg ended after 100 seconds, this one too).
-     */
-    static void enderEgg(ServerPlayer player, ServerLevel level) {
-        FallingBlockEntity riding = EGGS.get(player.getUUID());
-        if (riding != null && riding.isAlive() && player.getVehicle() == riding) { // off again
-            land(player);
-            return;
-        }
-        BlockPos at = BlockPos.containing(player.getEyePosition());
-        if (!level.getBlockState(at).isAir()) return;
-        FallingBlockEntity egg = FallingBlockEntity.fall(level, at, Blocks.DRAGON_EGG.defaultBlockState());
-        egg.setNoGravity(true);
-        egg.disableDrop();
-        egg.dropItem = false;
-        EGGS.put(player.getUUID(), egg);
-        player.startRiding(egg, true, true);
-        player.sendSystemMessage(Component.translatable("message.empirewand.ender_egg").withStyle(ChatFormatting.GOLD));
-        Vec3[] target = {player.getEyePosition().add(0, 10, 0)};
-        Tasks.every(1, 1, 2000, n -> {
-            if (EGGS.get(player.getUUID()) != egg || !egg.isAlive() || player.getVehicle() != egg || !player.isAlive()) {
-                if (EGGS.get(player.getUUID()) == egg) land(player);
-                return false;
-            }
-            if (n >= 1999) {
-                land(player);
-                return false;
-            }
-            egg.time = 1;
-            if (player.getLastClientInput().shift()) target[0] = target[0].add(player.getLookAngle());
-            // never down into the ground: it would land
-            int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, (int) Math.floor(target[0].x), (int) Math.floor(target[0].z));
-            if (target[0].y < ground + 2) target[0] = new Vec3(target[0].x, ground + 2, target[0].z);
-            // the plugin's EnderEgg: halfway to the target, a little of the old speed, divided by 1.5
-            Vec3 v = target[0].subtract(egg.position()).scale(0.5);
-            if (v.lengthSqr() > 1) v = v.normalize();
-            push(egg, v.add(egg.getDeltaMovement().scale(0.9)).scale(1 / 1.5));
-            if (n % 3 == 0) Fx.particles(level, ParticleTypes.PORTAL, egg.position().add(0, 1, 0), 10, 0.3, 0.3);
-            return true;
-        });
-    }
-
-    /** Off the egg, gently: no fall damage, and the egg is gone. */
-    private static void land(ServerPlayer player) {
-        FallingBlockEntity egg = EGGS.remove(player.getUUID());
-        landSafely(player);
-        if (player.getVehicle() == egg) player.stopRiding();
-        if (egg != null) egg.discard();
-    }
-
-    /** Sneaking on its own egg does not get a player off (it steers). */
-    public static boolean ridingEgg(Entity rider, @Nullable Entity vehicle) {
-        return vehicle != null && EGGS.get(rider.getUUID()) == vehicle && vehicle.isAlive();
-    }
-
     /** Jump: straight up, a trail of fireworks on the way down, and a blast of 7 where you land (you feel nothing). */
     static void jump(ServerPlayer player, ServerLevel level) {
         push(player, new Vec3(0, 4, 0));
@@ -518,10 +443,8 @@ public final class Spells {
         level.playSound(null, at.x, at.y, at.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 2, 1);
     }
 
-    /** A player leaves: their egg and blood block go too. */
+    /** A player leaves: their blood block and what they carry are let go. */
     public static void forget(Player player) {
-        FallingBlockEntity egg = EGGS.remove(player.getUUID());
-        if (egg != null) egg.discard();
         BLOOD_BLOCKS.remove(player.getUUID());
         LivingEntity carried = CARRIED.remove(player.getUUID());
         if (carried != null) carried.setNoGravity(false);
