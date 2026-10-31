@@ -47,6 +47,25 @@ public class WandItem extends Item {
         return true;
     }
 
+    /** How many favourites a wand keeps (the keys 1 to 5). */
+    public static final int FAVOURITES = 5;
+
+    /** The spell on this number key (slot 0 is key 1), as its place in the list, or -1. */
+    public int favourite(ItemStack stack, int slot) {
+        var list = stack.getOrDefault(Content.FAVOURITES.get(), List.<Integer>of());
+        return slot >= 0 && slot < list.size() ? list.get(slot) : -1;
+    }
+
+    /** Puts a spell on a number key (and takes it off any other key). */
+    public void setFavourite(ItemStack stack, int slot, int index) {
+        if (slot < 0 || slot >= FAVOURITES) return;
+        var list = new java.util.ArrayList<>(stack.getOrDefault(Content.FAVOURITES.get(), List.<Integer>of()));
+        while (list.size() < FAVOURITES) list.add(-1);
+        for (int i = 0; i < list.size(); i++) if (list.get(i) == index) list.set(i, -1);
+        list.set(slot, index);
+        stack.set(Content.FAVOURITES.get(), List.copyOf(list));
+    }
+
     /** The next spell it knows, round from this place in its list (step 1 forward, -1 back). */
     public int nextKnown(ItemStack stack, int from, int step) {
         for (int k = 1; k <= spells.size(); k++) {

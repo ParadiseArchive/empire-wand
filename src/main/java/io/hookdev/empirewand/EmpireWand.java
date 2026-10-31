@@ -25,7 +25,8 @@ public class EmpireWand {
     public EmpireWand(IEventBus modEventBus, ModContainer modContainer) {
         Content.register(modEventBus);
         modEventBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1").playToServer(CastSpell.TYPE, CastSpell.CODEC, CastSpell::handle)
-                .playToServer(SelectSpell.TYPE, SelectSpell.CODEC, SelectSpell::handle));
+                .playToServer(SelectSpell.TYPE, SelectSpell.CODEC, SelectSpell::handle)
+                .playToServer(SetFavourite.TYPE, SetFavourite.CODEC, SetFavourite::handle));
         WandGameTests.register(modEventBus);
         // spells that take a while run on the server's clock
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> Tasks.tick());

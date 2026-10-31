@@ -367,7 +367,7 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'message.empirewand.cannot_learn': '[X] None of your wands can learn %s (or it knows it already).',
   'screen.empirewand.unknown': '??? (find its scroll)',
   'key.empirewand.wheel': 'Spell wheel (with a wand in hand)',
-  'screen.empirewand.wheel': 'Spell wheel',
+  'screen.empirewand.wheel': 'Spell wheel', 'screen.empirewand.wheel.keys': '1-5: favourites',
   ...Object.fromEntries(Object.entries(SPELLS).map(([id, name]) => ['spell.empirewand.' + id, name])),
 });
 console.log('assets written');

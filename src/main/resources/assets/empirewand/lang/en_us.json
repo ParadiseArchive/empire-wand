@@ -97,6 +97,7 @@
   "screen.empirewand.unknown": "??? (find its scroll)",
   "key.empirewand.wheel": "Spell wheel (with a wand in hand)",
   "screen.empirewand.wheel": "Spell wheel",
+  "screen.empirewand.wheel.keys": "1-5: favourites",
   "spell.empirewand.explode": "Explode",
   "spell.empirewand.lightning_arrow": "Lightning Arrow",
   "spell.empirewand.escape": "Escape",

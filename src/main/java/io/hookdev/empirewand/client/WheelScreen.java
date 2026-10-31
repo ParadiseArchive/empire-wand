@@ -15,7 +15,10 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
-/** The spell wheel (the R key with a wand in hand): the wand's spells in a ring, each with its icon; click one to pick it. */
+/**
+ * The spell wheel (the R key with a wand in hand): the wand's spells in two rings, each with its icon; click one to pick
+ * it. Point at one and press 1 to 5 to put it on that key; press a key without pointing to pick that favourite.
+ */
 public class WheelScreen extends Screen {
     private static final int SIZE = 24;
     private final WandItem wand;
@@ -79,10 +82,32 @@ public class WheelScreen extends Screen {
             if (wand.knows(stack, i)) g.blit(icon(spell), b.getX() + 4, b.getY() + 4, b.getX() + 20, b.getY() + 20, 0, 1, 0, 1);
             else g.centeredText(font, "?", b.getX() + SIZE / 2, b.getY() + 8, 0xFF8A93A0);
         }
+        for (int slot = 0; slot < WandItem.FAVOURITES; slot++) { // the number keys, in the corner of their spell
+            int index = wand.favourite(stack, slot);
+            if (index < 0 || index >= buttons.size()) continue;
+            Button b = buttons.get(index);
+            g.text(font, String.valueOf(slot + 1), b.getX() + SIZE - 6, b.getY() + 1, 0xFFFFD23F, true);
+        }
         // in the middle: the spell under the mouse, or the one it has now
         Spell shown = current;
         for (int i = 0; i < buttons.size(); i++) if (buttons.get(i).isHovered() && wand.knows(stack, i)) shown = spells.get(i);
-        g.centeredText(font, shown.displayName(), cx, cy - 4, 0xFFFFFFFF);
+        g.centeredText(font, shown.displayName(), cx, cy - 8, 0xFFFFFFFF);
+        g.centeredText(font, Component.translatable("screen.empirewand.wheel.keys"), cx, cy + 4, 0xFF8A93A0);
+    }
+
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int slot = event.input() - 49; // the number keys 1 to 5 (GLFW 49 to 53)
+        if (slot < 0 || slot >= WandItem.FAVOURITES) return super.keyPressed(event);
+        for (int i = 0; i < buttons.size(); i++) {
+            if (!buttons.get(i).isHovered() || !wand.knows(stack, i)) continue;
+            wand.setFavourite(stack, slot, i); // here at once, the server's copy follows
+            ClientPacketDistributor.sendToServer(new io.hookdev.empirewand.SetFavourite(slot, i));
+            return true;
+        }
+        int favourite = wand.favourite(stack, slot);
+        if (favourite >= 0 && wand.knows(stack, favourite)) choose(favourite);
+        return true;
     }
 
     @Override

@@ -111,6 +111,9 @@ public final class WandGameTests {
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.assertTrue(item.spell(player.getMainHandItem()) == Spell.EXPLODE, "right-click: from Comet round to Explode");
         helper.assertTrue(player.getMainHandItem().getHoverName().getString().contains("Explode"), "its name says which");
+        item.setFavourite(wand, 2, 1);
+        item.setFavourite(wand, 4, 1);
+        helper.assertTrue(item.favourite(wand, 4) == 1 && item.favourite(wand, 2) == -1, "a spell sits on one number key at a time");
         helper.succeed();
     }
 
