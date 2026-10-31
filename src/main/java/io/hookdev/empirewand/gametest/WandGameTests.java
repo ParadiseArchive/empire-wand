@@ -54,6 +54,8 @@ public final class WandGameTests {
         test("a_charged_cast_hits_harder", WandGameTests::aChargedCastHitsHarder, 40);
         test("power_makes_it_stronger", WandGameTests::powerMakesItStronger, 20);
         test("a_gold_block_makes_it_gold", WandGameTests::aGoldBlockMakesItGold, 20);
+        test("a_dark_mage_casts_at_you", WandGameTests::aDarkMageCastsAtYou, 200);
+        test("the_wizard_tower_is_there", WandGameTests::theWizardTowerIsThere, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -286,6 +288,22 @@ public final class WandGameTests {
         helper.assertTrue(player.getMainHandItem().getOrDefault(Content.SKIN.get(), 0) == 1, "sneak and right-click with a gold block: a gold wand");
         helper.assertTrue(player.getOffhandItem().isEmpty(), "the gold block is used up");
         helper.assertTrue(Content.EMPIRE_WAND.get().spell(player.getMainHandItem()) == Spell.EXPLODE, "and the spell did not change");
+        helper.succeed();
+    }
+
+    private static void aDarkMageCastsAtYou(GameTestHelper helper) {
+        Mob pig = helper.spawnWithNoFreeWill(type("pig"), new BlockPos(0, 0, 1)); // a stand-in: he never goes for a player in creative, like the test player
+        var mage = helper.spawn(Content.DARK_MAGE.get(), new BlockPos(6, 0, 1));
+        mage.setTarget(pig);
+        helper.assertTrue(mage.getMainHandItem().is(Content.EMPIRE_WAND.get()), "he holds an Empire Wand");
+        helper.succeedWhen(() -> helper.assertTrue(pig.getHealth() < pig.getMaxHealth() || !pig.getActiveEffects().isEmpty() || pig.getDeltaMovement().y > 0.5
+                || !helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball.class, pig.getBoundingBox().inflate(16)).isEmpty(), "he casts a spell at it"));
+    }
+
+    private static void theWizardTowerIsThere(GameTestHelper helper) {
+        var tower = io.hookdev.empirewand.McVersion.template(helper.getLevel(), EmpireWand.id("wizard_tower"));
+        helper.assertTrue(tower.isPresent() && tower.get().getSize().getY() > 15, "the tower's template loads, " + tower.map(t -> t.getSize().toString()).orElse("none"));
+        helper.assertTrue(helper.getLevel().registryAccess().lookupOrThrow(Registries.STRUCTURE).get(ResourceKey.create(Registries.STRUCTURE, EmpireWand.id("wizard_tower"))).isPresent(), "and it is a structure in the world");
         helper.succeed();
     }
 

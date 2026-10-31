@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 491871234,
+    "separation": 10,
+    "spacing": 36
+  },
+  "structures": [
+    {
+      "structure": "empirewand:wizard_tower",
+      "weight": 1
+    }
+  ]
+}

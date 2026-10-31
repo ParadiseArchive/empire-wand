@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "empirewand:item/dark_mage_spawn_egg"
+  }
+}

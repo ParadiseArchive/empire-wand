@@ -24,6 +24,7 @@ public class EmpireWand {
 
     public EmpireWand(IEventBus modEventBus, ModContainer modContainer) {
         Content.register(modEventBus);
+        modEventBus.addListener((net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) -> event.put(Content.DARK_MAGE.get(), DarkMage.createAttributes().build()));
         modEventBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1").playToServer(CastSpell.TYPE, CastSpell.CODEC, CastSpell::handle)
                 .playToServer(SelectSpell.TYPE, SelectSpell.CODEC, SelectSpell::handle)
                 .playToServer(SetFavourite.TYPE, SetFavourite.CODEC, SetFavourite::handle));
@@ -42,6 +43,10 @@ public class EmpireWand {
         });
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.level.block.BreakBlockEvent event) -> {
             if (event.getPlayer() != null && event.getPlayer().getMainHandItem().getItem() instanceof WandItem) event.setCanceled(true);
+        });
+        // a Dark Mage beaten: an advancement
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) -> {
+            if (event.getEntity() instanceof DarkMage && event.getSource().getEntity() instanceof net.minecraft.server.level.ServerPlayer player) Awards.award(player, "mage_hunter");
         });
         // the Ender Dragon always leaves a heavy scroll, on top of the exit portal (it dies in the air)
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) -> {

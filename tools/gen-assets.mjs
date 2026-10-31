@@ -264,6 +264,7 @@ advancement('root', null, 'empirewand:empire_wand', 'Empire Wand', 'Get an Empir
   { wand: { trigger: 'minecraft:inventory_changed', conditions: { items: [{ items: 'empirewand:empire_wand' }] } } });
 advancement('combo', 'root', 'minecraft:packed_ice', null, null, 'goal');
 advancement('full_power', 'root', 'minecraft:glowstone_dust', null, null, 'task');
+advancement('mage_hunter', 'root', 'empirewand:dark_mage_spawn_egg', null, null, 'goal');
 advancement('bookworm', 'root', 'empirewand:spell_scroll', null, null, 'task');
 advancement('apprentice', 'bookworm', 'empirewand:spellbook', null, null, 'goal');
 advancement('archmage', 'apprentice', 'empirewand:empire_wand', null, null, 'challenge');
@@ -288,6 +289,152 @@ for (const [name, max, weight] of [['power', 3, 10], ['reach', 3, 5], ['multicas
 }
 json(join(ROOT, 'data/minecraft/tags/enchantment/in_enchanting_table.json'), { replace: false, values: ['empirewand:power', 'empirewand:reach', 'empirewand:multicast'] });
 
+// ---------- the Dark Mage: a humanoid skin (64 x 64, the zombie's layout; the left arm and leg use the right's) ----------
+texture('entity/dark_mage', 64, 64, ({ set, rect }) => {
+  const HOOD = '#2a1838', HOOD2 = '#3a2050', FACE = '#120a18', EYE = '#ff4fd8', ROBE = '#3a1f5a', ROBE2 = '#4a2a70', GOLD = '#d9a93a', HAND = '#b8a8c8', BOOT = '#141018';
+  // the head: a hood all round, a dark face with glowing eyes at the front
+  rect(0, 0, 32, 16, HOOD);
+  for (let x = 0; x < 32; x += 3) rect(x, 8, 1, 8, HOOD2);
+  rect(9, 9, 6, 6, FACE); // the front face is at (8, 8)
+  set(10, 12, EYE); set(13, 12, EYE);
+  // the body: a robe with a gold trim down the front and a gold belt
+  rect(16, 16, 24, 16, ROBE);
+  for (let y = 20; y < 32; y += 2) { rect(16, y, 4, 1, ROBE2); rect(28, y, 4, 1, ROBE2); }
+  rect(23, 20, 2, 12, GOLD); rect(20, 27, 8, 1, GOLD); rect(32, 27, 8, 1, GOLD); rect(16, 27, 4, 1, GOLD); rect(28, 27, 4, 1, GOLD);
+  // the arms: robe sleeves with gold cuffs, pale hands
+  rect(40, 16, 16, 16, ROBE);
+  rect(40, 29, 16, 1, GOLD);
+  rect(40, 30, 16, 2, HAND); rect(48, 16, 4, 4, HAND);
+  // the legs: the robe down to black boots
+  rect(0, 16, 16, 16, ROBE2);
+  rect(0, 29, 16, 3, BOOT); rect(8, 16, 4, 4, BOOT);
+});
+// its spawn egg
+picture('item/dark_mage_spawn_egg', [
+  '................',
+  '......PPPP......',
+  '.....PPMPPP.....',
+  '....PPPPPPPP....',
+  '....PPPPPMPP....',
+  '...PPMPPPPPPP...',
+  '...PPPPPPPPPP...',
+  '...PPPPPMPPPP...',
+  '...PPPMPPPPPP...',
+  '...PPPPPPPPMP...',
+  '....PPPPPPPP....',
+  '....PMPPPPPP....',
+  '.....PPPPPP.....',
+  '......PPPP......',
+  '................',
+  '................',
+], { P: '#3a1f5a', M: '#ff4fd8' });
+json(join(ASSETS, 'models/item/dark_mage_spawn_egg.json'), { parent: 'minecraft:item/generated', textures: { layer0: 'empirewand:item/dark_mage_spawn_egg' } });
+json(join(ASSETS, 'items/dark_mage_spawn_egg.json'), { model: { type: 'minecraft:model', model: 'empirewand:item/dark_mage_spawn_egg' } });
+// his loot table and the tower's chest: scrolls come from ScrollsModifier; the chest has some books and lapis besides
+json(join(DATA, 'loot_table/entities/dark_mage.json'), { type: 'minecraft:entity', pools: [] });
+json(join(DATA, 'loot_table/chests/wizard_tower.json'), { type: 'minecraft:chest', pools: [{ rolls: 4, entries: [
+  { type: 'minecraft:item', name: 'minecraft:book', weight: 3 }, { type: 'minecraft:item', name: 'minecraft:lapis_lazuli', weight: 3 },
+  { type: 'minecraft:item', name: 'minecraft:experience_bottle', weight: 2 }, { type: 'minecraft:item', name: 'minecraft:amethyst_shard', weight: 2 },
+  { type: 'minecraft:item', name: 'minecraft:ender_pearl', weight: 1 }] }] });
+
+// ---------- the Wizard Tower: a structure template (NBT, gzipped) built here, and the worldgen files ----------
+{
+  const W = 9, H = 22, D = 9;
+  const palette = [], blocks = [];
+  const stateId = (name, props) => {
+    const key = name + JSON.stringify(props || {});
+    let i = palette.findIndex((p) => p.key === key);
+    if (i < 0) { palette.push({ key, name, props }); i = palette.length - 1; }
+    return i;
+  };
+  const grid = new Map();
+  const put = (x, y, z, name, props, nbt) => grid.set(x + ',' + y + ',' + z, { x, y, z, state: stateId(name, props), nbt });
+  const corner = (x, z) => (x === 0 || x === W - 1) && (z === 0 || z === D - 1);
+  const wall = (x, z) => !corner(x, z) && (x === 0 || x === W - 1 || z === 0 || z === D - 1);
+  const inside = (x, z) => x > 0 && x < W - 1 && z > 0 && z < D - 1;
+  let seed = 7;
+  const random = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (let y = 0; y <= 16; y++) for (let x = 0; x < W; x++) for (let z = 0; z < D; z++) {
+    if (corner(x, z)) continue;
+    if (y === 0 || y === 6 || y === 12) { // the floors
+      if (y === 0) put(x, y, z, 'minecraft:deepslate_bricks');
+      else if (inside(x, z) && !(x === 1 && z === 4)) put(x, y, z, 'minecraft:dark_oak_planks'); // a hole for the ladder
+      else if (wall(x, z)) put(x, y, z, 'minecraft:deepslate_bricks');
+      else put(x, y, z, 'minecraft:air');
+      continue;
+    }
+    if (wall(x, z)) {
+      const window = (y === 3 || y === 4 || y === 9 || y === 10 || y === 14) && (x === 4 || z === 4) && !(z === 0 && x === 4 && y < 5);
+      const door = z === 0 && x === 4 && (y === 1 || y === 2);
+      if (door) put(x, y, z, 'minecraft:air');
+      else if (window) put(x, y, z, 'minecraft:purple_stained_glass');
+      else put(x, y, z, random() < 0.25 ? 'minecraft:mossy_stone_bricks' : random() < 0.4 ? 'minecraft:cracked_stone_bricks' : 'minecraft:stone_bricks');
+    } else if (inside(x, z)) put(x, y, z, 'minecraft:air');
+  }
+  for (let y = 1; y <= 15; y++) put(1, y, 4, 'minecraft:ladder', { facing: 'east', waterlogged: 'false' }); // against the west wall
+  // the ground floor: a cauldron, a crafting table, a lantern
+  put(6, 1, 6, 'minecraft:cauldron');
+  put(6, 1, 2, 'minecraft:crafting_table');
+  put(4, 1, 6, 'minecraft:soul_lantern', { hanging: 'false', waterlogged: 'false' });
+  // the middle floor: bookshelves, a lectern, an enchanting table
+  for (const [x, z] of [[7, 2], [7, 3], [7, 5], [7, 6], [3, 7], [5, 7], [6, 7]]) { put(x, 7, z, 'minecraft:bookshelf'); put(x, 8, z, 'minecraft:bookshelf'); }
+  put(4, 7, 4, 'minecraft:enchanting_table');
+  put(4, 7, 2, 'minecraft:lectern', { facing: 'north', has_book: 'false', powered: 'false' });
+  put(6, 7, 6, 'minecraft:soul_lantern', { hanging: 'false', waterlogged: 'false' });
+  // the top floor: the library, and its chest
+  for (let x = 2; x <= 7; x++) for (const z of [1, 7]) if (!(x === 4 && z === 1)) { put(x, 13, z, 'minecraft:bookshelf'); put(x, 14, z, 'minecraft:bookshelf'); }
+  for (const z of [2, 3, 5, 6]) { put(7, 13, z, 'minecraft:bookshelf'); put(7, 14, z, 'minecraft:bookshelf'); }
+  put(6, 13, 4, 'minecraft:chest', { facing: 'west', type: 'single', waterlogged: 'false' }, { LootTable: { t: 'string', v: 'empirewand:chests/wizard_tower' }, id: { t: 'string', v: 'minecraft:chest' } });
+  put(4, 13, 4, 'minecraft:soul_lantern', { hanging: 'false', waterlogged: 'false' });
+  // the roof: a purple point with a light on top
+  for (let y = 17, r = 4; r >= 0; y++, r--) for (let x = 4 - r; x <= 4 + r; x++) for (let z = 4 - r; z <= 4 + r; z++) {
+    if (r > 0 && x > 4 - r && x < 4 + r && z > 4 - r && z < 4 + r) continue; // hollow
+    put(x, y, z, 'minecraft:purple_terracotta');
+  }
+  put(4, 21, 4, 'minecraft:end_rod', { facing: 'up' });
+  for (const v of grid.values()) blocks.push(v);
+  const mage = (x, y, z) => ({ blockPos: [x, y, z], pos: [x + 0.5, y, z + 0.5], nbt: { id: { t: 'string', v: 'empirewand:dark_mage' }, PersistenceRequired: { t: 'byte', v: 1 } } });
+  const entities = [mage(4, 1, 3), mage(3, 13, 5)];
+
+  // a little NBT writer: compounds of {t, v}, lists of ints/doubles/compounds
+  const out = [];
+  const u8 = (n) => out.push(Buffer.from([n & 255]));
+  const i16 = (n) => { const b = Buffer.alloc(2); b.writeInt16BE(n); out.push(b); };
+  const i32 = (n) => { const b = Buffer.alloc(4); b.writeInt32BE(n); out.push(b); };
+  const f64 = (n) => { const b = Buffer.alloc(8); b.writeDoubleBE(n); out.push(b); };
+  const str = (s) => { const b = Buffer.from(s, 'utf8'); i16(b.length); out.push(b); };
+  const TAG = { byte: 1, int: 3, double: 6, string: 8, list: 9, compound: 10 };
+  const value = (t, v) => {
+    if (t === 'byte') u8(v); else if (t === 'int') i32(v); else if (t === 'double') f64(v); else if (t === 'string') str(v);
+    else if (t === 'compound') compound(v);
+    else if (t === 'list') { u8(v.length ? TAG[v.type] : 0); i32(v.items.length); for (const item of v.items) value(v.type, item); }
+  };
+  const compound = (fields) => { for (const [name, { t, v }] of Object.entries(fields)) { u8(TAG[t]); str(name); value(t, v); } u8(0); };
+  const ints = (a) => ({ t: 'list', v: { type: 'int', length: a.length, items: a } });
+  const doubles = (a) => ({ t: 'list', v: { type: 'double', length: a.length, items: a } });
+  const root = {
+    DataVersion: { t: 'int', v: 4790 }, // 26.1.2's: 26.3 brings it up to date as it loads
+    size: ints([W, H, D]),
+    palette: { t: 'list', v: { type: 'compound', length: palette.length, items: palette.map((p) => ({
+      Name: { t: 'string', v: p.name },
+      ...(p.props ? { Properties: { t: 'compound', v: Object.fromEntries(Object.entries(p.props).map(([k, v]) => [k, { t: 'string', v }])) } } : {}),
+    })) } },
+    blocks: { t: 'list', v: { type: 'compound', length: blocks.length, items: blocks.map((b) => ({ pos: ints([b.x, b.y, b.z]), state: { t: 'int', v: b.state }, ...(b.nbt ? { nbt: { t: 'compound', v: b.nbt } } : {}) })) } },
+    entities: { t: 'list', v: { type: 'compound', length: entities.length, items: entities.map((e) => ({ blockPos: ints(e.blockPos), pos: doubles(e.pos), nbt: { t: 'compound', v: e.nbt } })) } },
+  };
+  u8(TAG.compound); str(''); compound(root);
+  write(join(DATA, 'structure/wizard_tower.nbt'), (await import('node:zlib')).gzipSync(Buffer.concat(out)));
+}
+json(join(DATA, 'worldgen/template_pool/wizard_tower/start.json'), { elements: [{ element: { element_type: 'minecraft:single_pool_element', location: 'empirewand:wizard_tower',
+  processors: { processors: [] }, projection: 'rigid' }, weight: 1 }], fallback: 'minecraft:empty' });
+json(join(DATA, 'worldgen/structure/wizard_tower.json'), { type: 'minecraft:jigsaw', biomes: '#empirewand:has_structure/wizard_tower', max_distance_from_center: 80,
+  project_start_to_heightmap: 'WORLD_SURFACE_WG', size: 1, spawn_overrides: {}, start_height: { absolute: 0 }, start_pool: 'empirewand:wizard_tower/start',
+  step: 'surface_structures', terrain_adaptation: 'beard_thin', use_expansion_hack: false });
+json(join(DATA, 'worldgen/structure_set/wizard_tower.json'), { placement: { type: 'minecraft:random_spread', salt: 491871234, separation: 10, spacing: 36 },
+  structures: [{ structure: 'empirewand:wizard_tower', weight: 1 }] });
+json(join(DATA, 'tags/worldgen/biome/has_structure/wizard_tower.json'), { values: ['minecraft:plains', 'minecraft:forest', 'minecraft:dark_forest', 'minecraft:birch_forest',
+  'minecraft:taiga', 'minecraft:snowy_plains', 'minecraft:meadow', 'minecraft:old_growth_spruce_taiga', 'minecraft:savanna'] });
+
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
@@ -309,6 +456,8 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'item.empirewand.spellbook': 'Spellbook',
+  'entity.empirewand.dark_mage': 'Dark Mage', 'item.empirewand.dark_mage_spawn_egg': 'Dark Mage Spawn Egg',
+  'advancements.empirewand.mage_hunter.title': 'Mage Hunter', 'advancements.empirewand.mage_hunter.description': 'Defeat a Dark Mage',
   'message.empirewand.skin': '[X] Your wand is %s now.', 'skin.empirewand.0': 'classic', 'skin.empirewand.1': 'gold', 'skin.empirewand.2': 'obsidian', 'skin.empirewand.3': 'bone',
   'enchantment.empirewand.power': 'Power', 'enchantment.empirewand.reach': 'Reach', 'enchantment.empirewand.multicast': 'Multicast',
   'message.empirewand.combo': 'COMBO: %s!', 'combo.empirewand.shatter': 'Shatter', 'combo.empirewand.storm': 'Storm', 'combo.empirewand.toxic_tornado': 'Toxic Tornado',

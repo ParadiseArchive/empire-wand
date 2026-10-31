@@ -18,6 +18,11 @@ public final class Content {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(EmpireWand.MODID);
     private static final DeferredRegister.DataComponents COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, EmpireWand.MODID);
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, EmpireWand.MODID);
+    private static final DeferredRegister<net.minecraft.world.entity.EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, EmpireWand.MODID);
+    /** The Dark Mage (owner, 31 Oct 2026): lives in Wizard Towers. */
+    public static final DeferredHolder<net.minecraft.world.entity.EntityType<?>, net.minecraft.world.entity.EntityType<DarkMage>> DARK_MAGE = ENTITIES.register("dark_mage",
+            id -> net.minecraft.world.entity.EntityType.Builder.<DarkMage>of(DarkMage::new, net.minecraft.world.entity.MobCategory.MONSTER).sized(0.6f, 1.95f)
+                    .clientTrackingRange(8).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, id)));
     private static final DeferredRegister<com.mojang.serialization.MapCodec<? extends net.neoforged.neoforge.common.loot.IGlobalLootModifier>> LOOT_MODIFIERS =
             DeferredRegister.create(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, EmpireWand.MODID);
 
@@ -38,6 +43,8 @@ public final class Content {
             builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DeferredItem<WandItem> EMPIRE_WAND = ITEMS.registerItem("empire_wand", p -> new WandItem(p, Spell.EMPIRE, 4), p -> p.stacksTo(1).enchantable(15));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DARK_MAGE_SPAWN_EGG = ITEMS.registerItem("dark_mage_spawn_egg",
+            net.minecraft.world.item.SpawnEggItem::new, p -> p.spawnEgg(DARK_MAGE.get()));
     public static final DeferredItem<SpellbookItem> SPELLBOOK = ITEMS.registerItem("spellbook", SpellbookItem::new, p -> p.stacksTo(1));
     public static final DeferredItem<ScrollItem> SPELL_SCROLL = ITEMS.registerItem("spell_scroll", ScrollItem::new, p -> p.stacksTo(16).rarity(net.minecraft.world.item.Rarity.RARE));
 
@@ -57,6 +64,7 @@ public final class Content {
                 .displayItems((parameters, output) -> {
                     output.accept(EMPIRE_WAND.get());
                     output.accept(SPELLBOOK.get());
+                    output.accept(DARK_MAGE_SPAWN_EGG.get());
                     output.accept(SPELL_SCROLL.get()); // a sealed one
                     for (Spell spell : ScrollItem.findable()) output.accept(ScrollItem.of(spell));
                 })
@@ -77,5 +85,6 @@ public final class Content {
         COMPONENTS.register(modEventBus);
         TABS.register(modEventBus);
         LOOT_MODIFIERS.register(modEventBus);
+        ENTITIES.register(modEventBus);
     }
 }

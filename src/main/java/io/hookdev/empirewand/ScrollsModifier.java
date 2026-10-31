@@ -33,7 +33,11 @@ public final class ScrollsModifier implements IGlobalLootModifier {
      * A place: the chance it holds a scroll, its kinds of spell (none: any), whether heavy ones may turn up, and whether
      * the scroll takes the place of what it held (a suspicious block holds only one thing).
      */
-    public record Source(float chance, List<List<Spell>> kinds, boolean heavy, boolean replace) {
+    public record Source(float chance, List<List<Spell>> kinds, boolean heavy, boolean replace, int count) {
+        public Source(float chance, List<List<Spell>> kinds, boolean heavy, boolean replace) {
+            this(chance, kinds, heavy, replace, 1);
+        }
+
         /** The spells a scroll from here can hold. */
         public List<Spell> spells() {
             List<Spell> all = new ArrayList<>();
@@ -80,7 +84,10 @@ public final class ScrollsModifier implements IGlobalLootModifier {
             entry("entities/evoker", chest(0.25f, false)),
             entry("entities/illusioner", chest(0.5f, true)),
             entry("entities/witch", chest(0.1f, false, NATURE, BLOOD)),
-            entry("entities/wither", chest(1f, true, HEAVY)));
+            entry("entities/wither", chest(1f, true, HEAVY)),
+            // the Dark Mage, and his tower's library: three scrolls, the heavy ones too
+            Map.entry(EmpireWand.id("entities/dark_mage"), chest(0.6f, false)),
+            Map.entry(EmpireWand.id("chests/wizard_tower"), new Source(1f, List.of(), true, false, 3)));
 
     private static Map.Entry<Identifier, Source> entry(String table, Source source) {
         return Map.entry(Identifier.withDefaultNamespace(table), source);
@@ -109,7 +116,7 @@ public final class ScrollsModifier implements IGlobalLootModifier {
         List<Spell> spells = source.spells();
         if (spells.isEmpty()) return generatedLoot;
         if (source.replace()) generatedLoot.clear();
-        generatedLoot.add(ScrollItem.of(spells.get(context.getRandom().nextInt(spells.size()))));
+        for (int i = 0; i < source.count(); i++) generatedLoot.add(ScrollItem.of(spells.get(context.getRandom().nextInt(spells.size()))));
         return generatedLoot;
     }
 
