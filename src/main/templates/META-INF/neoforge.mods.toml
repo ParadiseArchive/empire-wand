@@ -1,15 +1,17 @@
 modLoader="javafml"
 loaderVersion="[1,)"
 license="${mod_license}"
+issueTrackerURL="https://github.com/ParadiseArchive/empire-wand/issues"
 
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+displayURL="https://github.com/ParadiseArchive/empire-wand"
 authors="Hook Development"
 description='''
-Two wands from 2013, rebuilt: the Empire Wand with seventeen spells and Blood Magic with three.
-Right-click picks a spell, left-click casts it.
+A wand from 2013, rebuilt: the Empire Wand, with thirty spells to find as scrolls round the world.
+Right-click picks a spell, left-click casts it, hold it to charge. No cooldown.
 '''
 
 [[dependencies.${mod_id}]]
