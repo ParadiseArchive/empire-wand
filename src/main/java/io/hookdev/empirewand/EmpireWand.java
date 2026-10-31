@@ -35,6 +35,13 @@ public class EmpireWand {
             if (event.getEntity() instanceof Player player && Spells.landsSafely(player)) event.setCanceled(true);
         });
         NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> Spells.forget(event.getEntity()));
+        // a wand casts, it does not dig: holding left-click on a block with one breaks nothing
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) -> {
+            if (event.getEntity().getMainHandItem().getItem() instanceof WandItem) event.setCanceled(true);
+        });
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.level.block.BreakBlockEvent event) -> {
+            if (event.getPlayer() != null && event.getPlayer().getMainHandItem().getItem() instanceof WandItem) event.setCanceled(true);
+        });
         // the Ender Dragon always leaves a heavy scroll, on top of the exit portal (it dies in the air)
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) -> {
             if (event.getEntity() instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon dragon && dragon.level() instanceof net.minecraft.server.level.ServerLevel level) {

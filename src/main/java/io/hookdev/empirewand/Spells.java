@@ -57,6 +57,33 @@ public final class Spells {
     private static final Map<UUID, Long> HOLES = new HashMap<>(), TORNADOES = new HashMap<>();
 
     public static void cast(ServerPlayer player, Spell spell) {
+        cast(player, spell, 1);
+    }
+
+    /** How much stronger a fully charged cast is (hold left-click a second). */
+    public static final float CHARGED = 1.6f;
+    /** The power of the spell being cast now: 1, or CHARGED. */
+    private static final ThreadLocal<Float> POWER = ThreadLocal.withInitial(() -> 1f);
+
+    static float power() {
+        return POWER.get();
+    }
+
+    /** Casts a spell at this power (1, or CHARGED when left-click was held): bigger blasts, more damage, further, longer. */
+    public static void cast(ServerPlayer player, Spell spell, float power) {
+        POWER.set(power);
+        try {
+            if (power > 1) {
+                Fx.particles((ServerLevel) player.level(), ParticleTypes.END_ROD, tip(player), 30, 0.3, 0.15);
+                Awards.award(player, "full_power");
+            }
+            castNow(player, spell);
+        } finally {
+            POWER.set(1f);
+        }
+    }
+
+    private static void castNow(ServerPlayer player, Spell spell) {
         ServerLevel level = (ServerLevel) player.level();
         Awards.cast(player, spell);
         long now = level.getGameTime();
@@ -204,15 +231,48 @@ public final class Spells {
         Vec3 at = Vec3.atCenterOf(target(player, 50));
         beam(player, level, at, Spell.EXPLODE);
         Fx.firework(level, at, Shape.BURST, Fx.WHITE, Fx.BLACK, false, false);
-        level.explode(null, at.x, at.y, at.z, 5, false, Level.ExplosionInteraction.TNT);
+        shatter(player, level, at);
+        level.explode(null, at.x, at.y, at.z, 5 * power(), false, Level.ExplosionInteraction.TNT);
     }
+
+    // ---------- combos (owner, 31 Oct 2026) ----------
+
+    /** A combo: said above the hotbar, a sound, and an advancement the first time. */
+    static void combo(ServerPlayer player, String name) {
+        player.sendOverlayMessage(Component.translatable("message.empirewand.combo", Component.translatable("combo.empirewand." + name)).withStyle(net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.BOLD));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8f, 1.4f);
+        Awards.award(player, "combo");
+    }
+
+    /** Shatter: a blast near something frozen (Freeze, Ice Wave, Blizzard) breaks it like glass: 8 damage more. */
+    static void shatter(ServerPlayer player, ServerLevel level, Vec3 at) {
+        boolean any = false;
+        for (LivingEntity entity : near(level, at, 5, player)) {
+            if (entity.getTicksFrozen() < entity.getTicksRequiredToFreeze()) continue;
+            entity.setTicksFrozen(0);
+            entity.hurtServer(level, level.damageSources().indirectMagic(player, player), 8 * power());
+            Fx.blockDust(level, entity.blockPosition(), Blocks.ICE.defaultBlockState());
+            Fx.blockDust(level, entity.blockPosition().above(), Blocks.PACKED_ICE.defaultBlockState());
+            level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.2f, 0.8f);
+            any = true;
+        }
+        if (any) combo(player, "shatter");
+    }
+
+    public static void shatterForTests(ServerPlayer player, ServerLevel level, Vec3 at) {
+        shatter(player, level, at);
+    }
+
+    /** Each player's Tornado while it goes (its centre), and whether Spores made it toxic. */
+    private static final Map<UUID, Vec3[]> TORNADO_AT = new HashMap<>();
+    private static final java.util.Set<UUID> TOXIC = new java.util.HashSet<>();
 
     /** Spark and Little Spark (and Blood Spark): a firework where you look and a zap (Little Spark is the stronger one). */
     static void spark(ServerPlayer player, ServerLevel level, Spell spell, int colour, int fade, float damage) {
         Vec3 at = Vec3.atCenterOf(target(player, 50));
         beam(player, level, at, spell);
         Fx.firework(level, at, Shape.BURST, colour, fade, colour == 0x3D0000, true);
-        zap(level, at, player, damage, false);
+        zap(level, at, player, damage * power(), false);
     }
 
     /** Leap: off you fly where you look, with an ender trail, and land without a scratch. */
@@ -234,7 +294,7 @@ public final class Spells {
         beam(player, level, at, Spell.LAUNCH);
         Fx.firework(level, at, Shape.SMALL_BALL, Fx.BLUE, Fx.PURPLE, false, false);
         for (LivingEntity entity : near(level, at, 3, null)) {
-            push(entity, new Vec3(0, 1.5, 0));
+            push(entity, new Vec3(0, 1.5 * power(), 0));
             Tasks.every(6, 3, 51, n -> {
                 if (entity.onGround() || !entity.isAlive()) return false;
                 Fx.particles(level, ParticleTypes.REVERSE_PORTAL, entity.position(), 6, 0.2, 0.02);
@@ -249,6 +309,7 @@ public final class Spells {
      */
     static void fireball(ServerPlayer player, ServerLevel level, boolean explosive) {
         Vec3 look = player.getLookAngle(), speed = look.scale(explosive ? 2 : 4);
+        float blast = 4 * power();
         SmallFireball fireball = new SmallFireball(level, player, look);
         fireball.setPos(player.getEyePosition().add(look.scale(2)));
         fireball.setDeltaMovement(speed);
@@ -258,7 +319,7 @@ public final class Spells {
             if (!fireball.isAlive()) {
                 Vec3 at = last[0];
                 if (explosive) {
-                    level.explode(null, at.x, at.y, at.z, 4, true, Level.ExplosionInteraction.TNT);
+                    level.explode(null, at.x, at.y, at.z, blast, true, Level.ExplosionInteraction.TNT);
                     Fx.firework(level, at, Shape.LARGE_BALL, Fx.BLACK, Fx.ORANGE, true, true);
                 } else {
                     Fx.firework(level, at, Shape.LARGE_BALL, Fx.ORANGE, Fx.RED, true, true);
@@ -281,6 +342,7 @@ public final class Spells {
     /** Lightning Storm: a ring of fireworks high round you, then lightning on everything within ten blocks. */
     static void lightningStorm(ServerPlayer player, ServerLevel level) {
         Vec3 centre = player.position();
+        double reach = 10 * power();
         List<Vec3> ring = new ArrayList<>();
         int r = 13, cx = player.getBlockX(), cy = player.getBlockY(), cz = player.getBlockZ();
         for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++) {
@@ -294,7 +356,7 @@ public final class Spells {
         }
         Tasks.later(ring.size(), () -> {
             if (!player.isAlive()) return;
-            for (Entity entity : level.getEntities(player, player.getBoundingBox().inflate(10))) lightning(level, entity.position(), player);
+            for (Entity entity : level.getEntities(player, player.getBoundingBox().inflate(reach))) lightning(level, entity.position(), player);
             Fx.firework(level, centre.add(0, 5, 0), Shape.STAR, Fx.AQUA, Fx.AQUA, false, false);
         });
     }
@@ -351,7 +413,7 @@ public final class Spells {
      * and at whatever you look at then, where it blows up.
      */
     static void bloodBlock(ServerPlayer player, ServerLevel level) {
-        float power = 5;
+        float power = 5 * power();
         BlockPos armed = BLOOD_BLOCKS.remove(player.getUUID());
         if (armed == null || !level.getBlockState(armed).is(Blocks.REDSTONE_BLOCK)) { // the first click
             BlockPos at = target(player, 50);
@@ -437,6 +499,7 @@ public final class Spells {
     static void jump(ServerPlayer player, ServerLevel level) {
         push(player, new Vec3(0, 4, 0));
         landSafely(player);
+        float blast = Math.min(10, 7 * power());
         Tasks.every(35, 2, 31, n -> {
             if (!player.isAlive()) return false;
             if (!player.onGround()) {
@@ -444,7 +507,7 @@ public final class Spells {
                 return true;
             }
             player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 10, 100));
-            level.explode(null, player.getX(), player.getY(), player.getZ(), 7, true, Level.ExplosionInteraction.TNT);
+            level.explode(null, player.getX(), player.getY(), player.getZ(), blast, true, Level.ExplosionInteraction.TNT);
             return false;
         });
     }
@@ -530,7 +593,7 @@ public final class Spells {
     static void meteorShower(ServerPlayer player, ServerLevel level) {
         Vec3 centre = Vec3.atCenterOf(target(player, 60));
         beam(player, level, centre, Spell.METEOR_SHOWER);
-        Tasks.every(1, 4, 12, n -> {
+        Tasks.every(1, 4, Math.round(12 * power()), n -> {
             double angle = level.getRandom().nextDouble() * Math.PI * 2, d = level.getRandom().nextDouble() * 6;
             Vec3 hit = centre.add(Math.cos(angle) * d, 0, Math.sin(angle) * d);
             Vec3 from = hit.add(-5 + level.getRandom().nextDouble() * 3, 28, -5 + level.getRandom().nextDouble() * 3);
@@ -555,14 +618,21 @@ public final class Spells {
         List<LivingEntity> hit = new ArrayList<>();
         Vec3[] from = {tip(player)};
         LivingEntity[] next = {first};
-        Tasks.every(1, 3, 6, n -> {
+        float damage = 6 * power();
+        Vec3[] tornado = TORNADO_AT.get(player.getUUID());
+        if (tornado != null) { // Storm: lightning into everything the tornado holds
+            Vec3 c = tornado[0];
+            for (LivingEntity caught : level.getEntitiesOfClass(LivingEntity.class, new AABB(c, c).inflate(4, 8, 4), e -> e != player && e.isAlive())) lightning(level, caught.position(), player);
+            combo(player, "storm");
+        }
+        Tasks.every(1, 3, Math.round((tornado != null ? 11 : 6) * power()), n -> {
             LivingEntity target = next[0];
             if (!target.isAlive()) return false;
             Vec3 to = target.position().add(0, target.getBbHeight() / 2, 0);
             Fx.beam(level, from[0], to, Spell.CHAIN_LIGHTNING.colour);
             Fx.particles(level, ParticleTypes.ELECTRIC_SPARK, to, 20, 0.4, 0.3);
             level.playSound(null, to.x, to.y, to.z, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.6f, 1.6f);
-            target.hurtServer(level, level.damageSources().indirectMagic(player, player), 6);
+            target.hurtServer(level, level.damageSources().indirectMagic(player, player), damage);
             hit.add(target);
             from[0] = to;
             next[0] = level.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(8), e -> e != player && e.isAlive() && !hit.contains(e))
@@ -574,7 +644,7 @@ public final class Spells {
     /** Earthquake: rings of the ground jump up round you, wider and wider, and throw what stands on them in the air. */
     static void earthquake(ServerPlayer player, ServerLevel level) {
         BlockPos centre = player.blockPosition();
-        Tasks.every(1, 2, 9, n -> {
+        Tasks.every(1, 2, Math.round(9 * power()), n -> {
             int r = n + 2;
             for (int x = -r; x <= r; x++) for (int z = -r; z <= r; z++) {
                 double d = Math.sqrt(x * x + z * z);
@@ -602,20 +672,28 @@ public final class Spells {
         Vec3 look = player.getLookAngle(), flat = new Vec3(look.x, 0, look.z);
         Vec3 dir = flat.lengthSqr() < 1.0e-4 ? new Vec3(1, 0, 0) : flat.normalize();
         Vec3[] centre = {player.position().add(dir.scale(4))};
-        Tasks.every(1, 1, 121, n -> {
+        int last = Math.round(120 * power());
+        TORNADO_AT.put(player.getUUID(), centre);
+        TOXIC.remove(player.getUUID());
+        Tasks.every(1, 1, last + 1, n -> {
+            if (n >= last) {
+                TORNADO_AT.remove(player.getUUID(), centre);
+                TOXIC.remove(player.getUUID());
+            }
             Vec3 c = centre[0].add(dir.scale(0.2));
             int ground = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) Math.floor(c.x), (int) Math.floor(c.z));
             c = new Vec3(c.x, ground, c.z);
             centre[0] = c;
             for (int k = 0; k < 24; k++) {
                 double a = n * 0.6 + k * 0.8, radius = 0.4 + k * 0.12;
-                level.sendParticles(ParticleTypes.CLOUD, c.x + Math.cos(a) * radius, c.y + k * 0.35, c.z + Math.sin(a) * radius, 1, 0, 0, 0, 0);
+                level.sendParticles(TOXIC.contains(player.getUUID()) && k % 2 == 0 ? ParticleTypes.SPORE_BLOSSOM_AIR : ParticleTypes.CLOUD, c.x + Math.cos(a) * radius, c.y + k * 0.35, c.z + Math.sin(a) * radius, 1, 0, 0, 0, 0);
             }
             if (n % 10 == 0) level.playSound(null, c.x, c.y, c.z, SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 1, 0.5f);
             for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, new AABB(c, c).inflate(4, 7, 4), e -> e != player && e.isAlive())) {
                 Vec3 in = new Vec3(c.x - entity.getX(), 0, c.z - entity.getZ());
                 Vec3 inward = in.lengthSqr() < 1.0e-4 ? Vec3.ZERO : in.normalize();
-                if (n >= 120) { // the end: off they fly
+                if (TOXIC.contains(player.getUUID())) entity.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 1));
+                if (n >= last) { // the end: off they fly
                     push(entity, inward.scale(-1.5).add(0, 0.8, 0));
                     continue;
                 }
@@ -631,7 +709,7 @@ public final class Spells {
     /** Ice Wave: a wave of cold along your look: water freezes (for a while), what it passes is slowed and frozen. */
     static void iceWave(ServerPlayer player, ServerLevel level) {
         Vec3 eye = player.getEyePosition(), look = player.getLookAngle();
-        Tasks.every(1, 1, 20, n -> {
+        Tasks.every(1, 1, Math.round(20 * power()), n -> {
             Vec3 at = eye.add(look.scale(1 + n));
             Fx.particles(level, ParticleTypes.SNOWFLAKE, at, 15, 0.6, 0.02);
             for (BlockPos pos : BlockPos.betweenClosed(BlockPos.containing(at).offset(-1, -3, -1), BlockPos.containing(at).offset(1, 0, 1))) {
@@ -700,18 +778,20 @@ public final class Spells {
     static void blackHole(ServerPlayer player, ServerLevel level) {
         Vec3 centre = Vec3.atCenterOf(target(player, 40)).add(0, 1.5, 0);
         beam(player, level, centre, Spell.BLACK_HOLE);
+        float blast = 4 * power();
+        double pull = 10 * power();
         Tasks.every(1, 1, 81, n -> {
             if (n == 80) {
-                level.explode(null, centre.x, centre.y, centre.z, 4, false, Level.ExplosionInteraction.TNT);
+                level.explode(null, centre.x, centre.y, centre.z, blast, false, Level.ExplosionInteraction.TNT);
                 Fx.firework(level, centre, Shape.LARGE_BALL, new int[] {0x4A1A70, Fx.BLACK}, new int[] {Fx.PURPLE}, true, true);
                 return false;
             }
             level.sendParticles(ParticleTypes.SQUID_INK, centre.x, centre.y, centre.z, 6, 0.3, 0.3, 0.3, 0);
             level.sendParticles(ParticleTypes.REVERSE_PORTAL, centre.x, centre.y, centre.z, 12, 2.5, 2.5, 2.5, 0.05);
             if (n % 20 == 0) level.playSound(null, centre.x, centre.y, centre.z, SoundEvents.PORTAL_AMBIENT, SoundSource.PLAYERS, 1, 0.5f);
-            for (Entity entity : level.getEntities(player, new AABB(centre, centre).inflate(10), e -> e.isAlive() && !(e instanceof FallingBlockEntity))) {
+            for (Entity entity : level.getEntities(player, new AABB(centre, centre).inflate(pull), e -> e.isAlive() && !(e instanceof FallingBlockEntity))) {
                 Vec3 in = centre.subtract(entity.position());
-                if (in.lengthSqr() > 100 || in.lengthSqr() < 0.25) continue;
+                if (in.lengthSqr() > pull * pull || in.lengthSqr() < 0.25) continue;
                 push(entity, entity.getDeltaMovement().scale(0.5).add(in.normalize().scale(0.35)));
             }
             return true;
@@ -765,6 +845,11 @@ public final class Spells {
 
     /** Spores: a poisonous cloud of spores where you look, for ten seconds. */
     static void spores(ServerPlayer player, ServerLevel level) {
+        if (TORNADO_AT.containsKey(player.getUUID())) { // Toxic Tornado: the spores go into your whirlwind
+            TOXIC.add(player.getUUID());
+            combo(player, "toxic_tornado");
+            return;
+        }
         Vec3 at = targetEntity(player, 40);
         beam(player, level, at, Spell.SPORES);
         var cloud = new net.minecraft.world.entity.AreaEffectCloud(level, at.x, at.y, at.z);
@@ -796,6 +881,8 @@ public final class Spells {
 
     /** A player leaves: their blood block and what they carry are let go. */
     public static void forget(Player player) {
+        TORNADO_AT.remove(player.getUUID());
+        TOXIC.remove(player.getUUID());
         BLOOD_BLOCKS.remove(player.getUUID());
         LivingEntity carried = CARRIED.remove(player.getUUID());
         if (carried != null) carried.setNoGravity(false);

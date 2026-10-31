@@ -244,6 +244,8 @@ const advancement = (id, parent, icon, title, description, frame, criteria) => j
 });
 advancement('root', null, 'empirewand:empire_wand', 'Empire Wand', 'Get an Empire Wand', 'task',
   { wand: { trigger: 'minecraft:inventory_changed', conditions: { items: [{ items: 'empirewand:empire_wand' }] } } });
+advancement('combo', 'root', 'minecraft:packed_ice', null, null, 'goal');
+advancement('full_power', 'root', 'minecraft:glowstone_dust', null, null, 'task');
 advancement('bookworm', 'root', 'empirewand:spell_scroll', null, null, 'task');
 advancement('apprentice', 'bookworm', 'empirewand:spellbook', null, null, 'goal');
 advancement('archmage', 'apprentice', 'empirewand:empire_wand', null, null, 'challenge');
@@ -271,6 +273,9 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'item.empirewand.spellbook': 'Spellbook',
+  'message.empirewand.combo': 'COMBO: %s!', 'combo.empirewand.shatter': 'Shatter', 'combo.empirewand.storm': 'Storm', 'combo.empirewand.toxic_tornado': 'Toxic Tornado',
+  'advancements.empirewand.combo.title': 'Combo!', 'advancements.empirewand.combo.description': 'Pull off a spell combo: Shatter, Storm or Toxic Tornado',
+  'advancements.empirewand.full_power.title': 'Full Power', 'advancements.empirewand.full_power.description': 'Hold left-click to cast a fully charged spell',
   'advancements.empirewand.root.title': 'Empire Wand', 'advancements.empirewand.root.description': 'Get an Empire Wand',
   'advancements.empirewand.bookworm.title': "Bookworm", 'advancements.empirewand.bookworm.description': "Learn a spell from a scroll",
   'advancements.empirewand.apprentice.title': "Apprentice", 'advancements.empirewand.apprentice.description': "Have a wand that knows ten spells",

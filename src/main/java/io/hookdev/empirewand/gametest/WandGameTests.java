@@ -50,6 +50,8 @@ public final class WandGameTests {
         test("scrolls_turn_up_in_chests", WandGameTests::scrollsTurnUpInChests, 20);
         test("scrolls_fit_where_they_lie", WandGameTests::scrollsFitWhereTheyLie, 20);
         test("a_sealed_scroll_opens", WandGameTests::aSealedScrollOpens, 20);
+        test("a_frozen_one_shatters", WandGameTests::aFrozenOneShatters, 20);
+        test("a_charged_cast_hits_harder", WandGameTests::aChargedCastHitsHarder, 40);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -231,6 +233,27 @@ public final class WandGameTests {
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         Spell spell = io.hookdev.empirewand.ScrollItem.spell(player.getMainHandItem());
         helper.assertTrue(spell != null && !io.hookdev.empirewand.ScrollsModifier.HEAVY.contains(spell), "the seal breaks: a spell, not a heavy one, it is " + spell);
+        helper.succeed();
+    }
+
+    private static void aFrozenOneShatters(GameTestHelper helper) {
+        wall(helper);
+        ServerPlayer player = caster(helper);
+        player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+        Mob pig = helper.spawnWithNoFreeWill(type("pig"), new BlockPos(4, 0, 1));
+        pig.setTicksFrozen(pig.getTicksRequiredToFreeze() + 100);
+        io.hookdev.empirewand.Spells.shatterForTests(player, helper.getLevel(), pig.position());
+        helper.assertTrue(pig.getTicksFrozen() == 0 && pig.getHealth() < pig.getMaxHealth(), "a blast near a frozen pig shatters it");
+        helper.succeed();
+    }
+
+    private static void aChargedCastHitsHarder(GameTestHelper helper) {
+        wall(helper);
+        ServerPlayer player = caster(helper);
+        Mob pig = helper.spawnWithNoFreeWill(type("pig"), new BlockPos(5, 0, 1));
+        float full = pig.getHealth();
+        Spells.cast(player, Spell.SPARK, Spells.CHARGED);
+        helper.assertTrue(full - pig.getHealth() > 3, "a charged Spark does more than 3, it did " + (full - pig.getHealth()));
         helper.succeed();
     }
 

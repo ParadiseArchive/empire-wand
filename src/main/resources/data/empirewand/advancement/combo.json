@@ -1,0 +1,22 @@
+{
+  "parent": "empirewand:root",
+  "display": {
+    "icon": {
+      "id": "minecraft:packed_ice"
+    },
+    "title": {
+      "translate": "advancements.empirewand.combo.title"
+    },
+    "description": {
+      "translate": "advancements.empirewand.combo.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
