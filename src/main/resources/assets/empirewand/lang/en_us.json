@@ -3,6 +3,8 @@
   "item.empirewand.empire_wand": "Empire Wand",
   "message.empirewand.selected": "[X] Selected: %s",
   "item.empirewand.spell_scroll": "Spell Scroll",
+  "item.empirewand.sealed_scroll": "Sealed Spell Scroll",
+  "message.empirewand.seal": "[X] The seal breaks: %s!",
   "item.empirewand.spell_scroll.of": "Spell Scroll: %s",
   "message.empirewand.learned": "[X] Your %s learned %s!",
   "message.empirewand.cannot_learn": "[X] None of your wands can learn %s (or it knows it already).",

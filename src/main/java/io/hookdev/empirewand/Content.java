@@ -49,6 +49,7 @@ public final class Content {
                 .icon(() -> new ItemStack(EMPIRE_WAND.get()))
                 .displayItems((parameters, output) -> {
                     output.accept(EMPIRE_WAND.get());
+                    output.accept(SPELL_SCROLL.get()); // a sealed one
                     for (Spell spell : ScrollItem.findable()) output.accept(ScrollItem.of(spell));
                 })
                 .build());

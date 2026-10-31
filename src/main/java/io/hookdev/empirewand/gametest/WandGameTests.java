@@ -48,6 +48,8 @@ public final class WandGameTests {
         test("confuse_makes_it_dizzy", WandGameTests::confuseMakesItDizzy, 20);
         test("a_scroll_teaches_a_spell", WandGameTests::aScrollTeachesASpell, 20);
         test("scrolls_turn_up_in_chests", WandGameTests::scrollsTurnUpInChests, 20);
+        test("scrolls_fit_where_they_lie", WandGameTests::scrollsFitWhereTheyLie, 20);
+        test("a_sealed_scroll_opens", WandGameTests::aSealedScrollOpens, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -194,6 +196,39 @@ public final class WandGameTests {
         }
         helper.assertTrue(library > 0, "a stronghold library holds scrolls");
         helper.assertTrue(house == 0, "a village house does not");
+        helper.succeed();
+    }
+
+    /** What scrolls a loot table gives in so many rolls. */
+    private static java.util.List<Spell> scrolls(GameTestHelper helper, String table, int times) {
+        var level = helper.getLevel();
+        var params = new net.minecraft.world.level.storage.loot.LootParams.Builder(level)
+                .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, helper.absoluteVec(Vec3.ZERO))
+                .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST);
+        var loot = level.getServer().reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, Identifier.withDefaultNamespace(table)));
+        java.util.List<Spell> found = new java.util.ArrayList<>();
+        for (int i = 0; i < times; i++) for (ItemStack stack : loot.getRandomItems(params)) {
+            Spell spell = io.hookdev.empirewand.ScrollItem.spell(stack);
+            if (stack.is(Content.SPELL_SCROLL.get()) && spell != null) found.add(spell);
+        }
+        return found;
+    }
+
+    private static void scrollsFitWhereTheyLie(GameTestHelper helper) {
+        var igloo = scrolls(helper, "chests/igloo_chest", 60);
+        helper.assertTrue(!igloo.isEmpty() && io.hookdev.empirewand.ScrollsModifier.FROST.containsAll(igloo), "an igloo holds ice spells, it held " + igloo);
+        var dungeon = scrolls(helper, "chests/simple_dungeon", 80);
+        helper.assertTrue(!dungeon.isEmpty() && dungeon.stream().noneMatch(io.hookdev.empirewand.ScrollsModifier.HEAVY::contains), "a dungeon never holds the heavy ones, it held " + dungeon);
+        helper.succeed();
+    }
+
+    private static void aSealedScrollOpens(GameTestHelper helper) {
+        ServerPlayer player = caster(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.SPELL_SCROLL.get()));
+        helper.assertTrue(io.hookdev.empirewand.ScrollItem.spell(player.getMainHandItem()) == null, "a sealed scroll has no spell yet");
+        player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        Spell spell = io.hookdev.empirewand.ScrollItem.spell(player.getMainHandItem());
+        helper.assertTrue(spell != null && !io.hookdev.empirewand.ScrollsModifier.HEAVY.contains(spell), "the seal breaks: a spell, not a heavy one, it is " + spell);
         helper.succeed();
     }
 

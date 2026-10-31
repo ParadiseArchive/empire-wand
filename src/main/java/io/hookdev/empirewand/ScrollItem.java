@@ -19,7 +19,8 @@ import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A spell scroll (owner, 31 Oct 2026): found in chests. Right-click it and the first of your wands that can learn its
+ * A spell scroll (owner, 31 Oct 2026): found in chests, vaults, suspicious blocks and on some mobs (ScrollsModifier),
+ * or bought sealed from a librarian (the seal breaks when you open it: a spell, not a heavy one). Right-click it and the first of your wands that can learn its
  * spell (the one in your other hand first) learns it.
  */
 public class ScrollItem extends Item {
@@ -53,7 +54,18 @@ public class ScrollItem extends Item {
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack scroll = player.getItemInHand(hand);
         Spell spell = spell(scroll);
-        if (spell == null || !(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
+        if (!(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
+        if (spell == null) { // a sealed scroll (from a librarian): the seal breaks, and it is a spell
+            List<Spell> spells = new ArrayList<>(ScrollItem.findable());
+            spells.removeAll(ScrollsModifier.HEAVY);
+            Spell found = spells.get(server.getRandom().nextInt(spells.size()));
+            ItemStack opened = of(found);
+            opened.setCount(scroll.getCount());
+            player.setItemInHand(hand, opened);
+            player.sendOverlayMessage(Component.translatable("message.empirewand.seal", found.displayName()).withStyle(ChatFormatting.GOLD));
+            server.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1, 1);
+            return InteractionResult.SUCCESS;
+        }
         // the wand in the other hand first, then the rest of the inventory
         List<ItemStack> wands = new ArrayList<>();
         wands.add(player.getItemInHand(hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND));
@@ -74,6 +86,6 @@ public class ScrollItem extends Item {
     @Override
     public Component getName(ItemStack stack) {
         Spell spell = spell(stack);
-        return spell == null ? super.getName(stack) : Component.translatable("item.empirewand.spell_scroll.of", spell.displayName()).withStyle(ChatFormatting.GOLD);
+        return spell == null ? Component.translatable("item.empirewand.sealed_scroll").withStyle(ChatFormatting.GOLD) : Component.translatable("item.empirewand.spell_scroll.of", spell.displayName()).withStyle(ChatFormatting.GOLD);
     }
 }

@@ -206,8 +206,12 @@ picture('item/spell_scroll', SCROLL, { P: '#d9c79a', p: '#a8935e', l: '#efe2bd' 
 picture('item/spell_scroll_ribbon', SCROLL, { R: '#b0b0b0', W: '#ffffff' });
 json(join(ASSETS, 'models/item/spell_scroll.json'), { parent: 'minecraft:item/generated', textures: { layer0: 'empirewand:item/spell_scroll', layer1: 'empirewand:item/spell_scroll_ribbon' } });
 json(join(ASSETS, 'items/spell_scroll.json'), { model: { type: 'minecraft:model', model: 'empirewand:item/spell_scroll',
-  tints: [{ type: 'minecraft:constant', value: -1 }, { type: 'minecraft:custom_model_data', index: 0, default: 0xFFFFFF }] } });
+  tints: [{ type: 'minecraft:constant', value: -1 }, { type: 'minecraft:custom_model_data', index: 0, default: 0xB02020 }] } }); // sealed: red wax
 json(join(DATA, 'loot_modifiers/scrolls.json'), { type: 'empirewand:scrolls' });
+// a librarian (level 4) sells a sealed scroll: a spell at random when it is opened (no item functions: 26.1 and 26.3 write those differently)
+json(join(DATA, 'villager_trade/librarian/sealed_scroll.json'), { gives: { id: 'empirewand:spell_scroll' }, wants: { id: 'minecraft:emerald', count: 20 },
+  additional_wants: { id: 'minecraft:book' }, max_uses: 4, reputation_discount: 0.05 });
+json(join(ROOT, 'data/minecraft/tags/villager_trade/librarian/level_4.json'), { replace: false, values: ['empirewand:librarian/sealed_scroll'] });
 
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
@@ -228,7 +232,8 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'itemGroup.empirewand': 'Empire Wand',
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
-  'item.empirewand.spell_scroll': 'Spell Scroll', 'item.empirewand.spell_scroll.of': 'Spell Scroll: %s',
+  'item.empirewand.spell_scroll': 'Spell Scroll', 'item.empirewand.sealed_scroll': 'Sealed Spell Scroll',
+  'message.empirewand.seal': '[X] The seal breaks: %s!', 'item.empirewand.spell_scroll.of': 'Spell Scroll: %s',
   'message.empirewand.learned': '[X] Your %s learned %s!',
   'message.empirewand.cannot_learn': '[X] None of your wands can learn %s (or it knows it already).',
   'screen.empirewand.unknown': '??? (find its scroll)',

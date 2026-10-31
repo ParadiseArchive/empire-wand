@@ -35,6 +35,16 @@ public class EmpireWand {
             if (event.getEntity() instanceof Player player && Spells.landsSafely(player)) event.setCanceled(true);
         });
         NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> Spells.forget(event.getEntity()));
+        // the Ender Dragon always leaves a heavy scroll, on top of the exit portal (it dies in the air)
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) -> {
+            if (event.getEntity() instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon dragon && dragon.level() instanceof net.minecraft.server.level.ServerLevel level) {
+                var top = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, net.minecraft.core.BlockPos.ZERO).above(2);
+                var spells = ScrollsModifier.HEAVY.stream().filter(ScrollItem.findable()::contains).toList();
+                var scroll = new net.minecraft.world.entity.item.ItemEntity(level, top.getX() + 0.5, top.getY(), top.getZ() + 0.5, ScrollItem.of(spells.get(level.getRandom().nextInt(spells.size()))));
+                scroll.setGlowingTag(true);
+                level.addFreshEntity(scroll);
+            }
+        });
     }
 
     public static Identifier id(String path) {
