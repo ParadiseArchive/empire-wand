@@ -1,15 +1,16 @@
 # Empire Wand
 
-![Empire Wand: thirty spells, no cooldown](https://raw.githubusercontent.com/ParadiseArchive/empire-wand/v2.0.0/.github/readme/banner.png)
+![Empire Wand: one wand, thirty spells](https://raw.githubusercontent.com/ParadiseArchive/empire-wand/v2.0.0/.github/readme/banner.png)
 
-**One wand, thirty spells, no cooldown.**
+**One wand, thirty spells.**
 
-Empire Wand started in 2013 as a Bukkit plugin for Minecraft 1.7.2. Now it is back, rebuilt for NeoForge, with every spell from back then and plenty of new ones. There is no cooldown and no mana: spamming spells is the whole idea.
+Empire Wand started in 2013 as a Bukkit plugin for Minecraft 1.7.2. Now it is back, rebuilt for NeoForge, with every spell from back then and plenty of new ones. No mana: after each spell the wand cools down for a moment, from a second after a spark to fifteen after a black hole.
 
 ## How it works
 
 - **Right-click** picks the next spell, **left-click** casts it.
 - **Hold left-click** for a second: a charged cast, bigger, stronger and further.
+- **A cooldown** after each spell (shown on the wand, as with ender pearls): short for the light spells, long for the heavy ones.
 - **The spell wheel:** press R for all its spells in two rings; put your favourites on the keys 1 to 5, or sneak and scroll.
 - Every spell has its colour: the wand's crystal takes it on, and a beam of sparks runs from its tip to where the spell lands.
 

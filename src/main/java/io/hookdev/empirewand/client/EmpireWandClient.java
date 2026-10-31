@@ -45,6 +45,7 @@ public class EmpireWandClient {
         var player = Minecraft.getInstance().player;
         if (!event.isAttack() || player == null || !(player.getMainHandItem().getItem() instanceof WandItem)) return;
         event.setCanceled(true);
+        if (player.getCooldowns().isOnCooldown(player.getMainHandItem())) return; // still cooling down: nothing
         event.setSwingHand(true);
         if (charge < 0) charge = 0;
     }

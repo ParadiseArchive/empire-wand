@@ -60,6 +60,20 @@ public final class Spells {
         cast(player, spell, 1);
     }
 
+    /**
+     * A left-click with the wand: its spell, unless the wand is still cooling down; then the wand cools down for as long
+     * as the spell says (half as long again after a charged cast). Not in creative.
+     */
+    public static boolean castFromWand(ServerPlayer player, WandItem wand, int charge) {
+        var stack = player.getMainHandItem();
+        if (player.getCooldowns().isOnCooldown(stack)) return false;
+        Spell spell = wand.spell(stack);
+        boolean charged = charge >= CastSpell.FULL;
+        cast(player, spell, charged ? CHARGED : 1);
+        if (!player.getAbilities().instabuild) player.getCooldowns().addCooldown(stack, Math.round(spell.cooldown * (charged ? 1.5f : 1)));
+        return true;
+    }
+
     /** How much stronger a fully charged cast is (hold left-click a second). */
     public static final float CHARGED = 1.6f;
     /** The power of the spell being cast now: 1, or CHARGED. */

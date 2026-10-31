@@ -56,6 +56,7 @@ public final class WandGameTests {
         test("a_gold_block_makes_it_gold", WandGameTests::aGoldBlockMakesItGold, 20);
         test("a_dark_mage_casts_at_you", WandGameTests::aDarkMageCastsAtYou, 200);
         test("the_wizard_tower_is_there", WandGameTests::theWizardTowerIsThere, 20);
+        test("the_wand_cools_down", WandGameTests::theWandCoolsDown, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -304,6 +305,21 @@ public final class WandGameTests {
         var tower = io.hookdev.empirewand.McVersion.template(helper.getLevel(), EmpireWand.id("wizard_tower"));
         helper.assertTrue(tower.isPresent() && tower.get().getSize().getY() > 15, "the tower's template loads, " + tower.map(t -> t.getSize().toString()).orElse("none"));
         helper.assertTrue(helper.getLevel().registryAccess().lookupOrThrow(Registries.STRUCTURE).get(ResourceKey.create(Registries.STRUCTURE, EmpireWand.id("wizard_tower"))).isPresent(), "and it is a structure in the world");
+        helper.succeed();
+    }
+
+    private static void theWandCoolsDown(GameTestHelper helper) {
+        wall(helper);
+        ServerPlayer player = caster(helper);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.EMPIRE_WAND.get()));
+        helper.assertTrue(Spells.castFromWand(player, Content.EMPIRE_WAND.get(), 0), "the first cast goes");
+        helper.assertTrue(player.getCooldowns().isOnCooldown(player.getMainHandItem()), "then the wand cools down");
+        helper.assertFalse(Spells.castFromWand(player, Content.EMPIRE_WAND.get(), 0), "and a second cast right away does not go");
+        player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+        player.getCooldowns().removeCooldown(Content.EMPIRE_WAND.getId());
+        Spells.castFromWand(player, Content.EMPIRE_WAND.get(), 0);
+        helper.assertFalse(player.getCooldowns().isOnCooldown(player.getMainHandItem()), "in creative: no cooldown");
         helper.succeed();
     }
 

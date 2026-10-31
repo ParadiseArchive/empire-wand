@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/readme/banner.png" width="100%" alt="Empire Wand: thirty spells, no cooldown. EMPIRE WAND in pixel letters next to a classic, a gold and an obsidian Empire Wand.">
+  <img src=".github/readme/banner.png" width="100%" alt="Empire Wand: one wand, thirty spells. EMPIRE WAND in pixel letters next to a classic, a gold and an obsidian Empire Wand.">
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 Empire Wand is a Minecraft mod about one wand and thirty spells. It started in 2013 as a Bukkit plugin for
 Minecraft 1.7.2; now it is back, rebuilt for NeoForge, with every spell from back then and plenty of new ones.
-There is no cooldown and no mana: spamming spells is the whole idea.
+No mana: after each spell the wand cools down for a moment, a second for a spark, up to fifteen for a black hole.
 
 **One wand, thirty spells.** Right-click picks the next spell, left-click casts it. Hold left-click for a second and
 the cast is charged: bigger, stronger, further. Every spell has its colour: the wand's crystal takes it on, and a beam
@@ -64,6 +64,12 @@ plugin. The fireworks burst right on the spot, as they did back then.
 ### New spells
 Meteor Shower, Chain Lightning, Earthquake and Tornado; Blood Wave and Blood Spark; Ice Wave, Freeze and Blizzard;
 Blink, Black Hole and Levitate; Roots, Spores and Overgrowth.
+
+### Cooldowns
+After a spell the wand cools down, as an ender pearl does: about a second after the light ones (Spark, Comet,
+Capture), a few seconds after Explode, Leap or Ice Wave, ten to fifteen after the heavy ones (Meteor Shower, Black
+Hole, Tornado, Lightning Storm, Earthquake). A charged cast takes half as long again. The spellbook shows each one.
+No cooldown in creative.
 
 ### Combos
 Some spells work together. A blast near something frozen shatters it (**Shatter**). Chain Lightning while your Tornado

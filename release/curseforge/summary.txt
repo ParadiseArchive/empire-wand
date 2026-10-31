@@ -1,1 +1,1 @@
-One wand, thirty spells, no cooldown: a 2013 plugin rebuilt, with spell scrolls to find, a spell wheel, combos and Dark Mages.
+One wand, thirty spells: a 2013 plugin rebuilt, with spell scrolls to find, a spell wheel, combos, charged casts and Dark Mages.

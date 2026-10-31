@@ -20,7 +20,7 @@ mkdirSync('release/curseforge/media', { recursive: true });
 
 // the spells, in the wand's order, with their colours and names (from Spell.java and the language file)
 const LANG = JSON.parse(readFileSync('src/main/resources/assets/empirewand/lang/en_us.json', 'utf8'));
-const SPELLS = [...readFileSync('src/main/java/io/hookdev/empirewand/Spell.java', 'utf8').matchAll(/([A-Z_]+)\(0x([0-9A-Fa-f]{6})\)/g)].map(([, name, colour]) => ({
+const SPELLS = [...readFileSync('src/main/java/io/hookdev/empirewand/Spell.java', 'utf8').matchAll(/([A-Z_]+)\(0x([0-9A-Fa-f]{6}),/g)].map(([, name, colour]) => ({
   id: name.toLowerCase(), colour: '#' + colour, name: LANG['spell.empirewand.' + name.toLowerCase()],
 }));
 const ORDER = readFileSync('src/main/java/io/hookdev/empirewand/Spell.java', 'utf8').match(/EMPIRE = List\.of\(([^;]+)\);/)[1].split(',').map((s) => s.trim().toLowerCase());
@@ -69,7 +69,7 @@ p{margin:0;font-size:18px;color:#aeb6c9;max-width:470px}
 <div class="art" id="art"><div class="grid"></div>
   <div class="left">
     <div class="logo">EMPIRE<br>WAND</div>
-    <h1>Thirty spells. No cooldown.</h1>
+    <h1>One wand. Thirty spells.</h1>
     <p>A wand from 2013, rebuilt. Right-click picks a spell, left-click casts it, hold it to charge. Find the rest of its spells as scrolls round the world.</p>
     <div class="chips"><span class="chip" style="color:#2de2e6">Minecraft 26.1.2 · 26.3</span><span class="chip" style="color:#2de2e6">NeoForge</span><span class="chip" style="color:#ffb547">Version ${VERSION}</span><span class="chip" style="color:#ff4f8b">Open source</span></div>
   </div>

@@ -11,7 +11,7 @@ displayURL="https://github.com/ParadiseArchive/empire-wand"
 authors="Hook Development"
 description='''
 A wand from 2013, rebuilt: the Empire Wand, with thirty spells to find as scrolls round the world.
-Right-click picks a spell, left-click casts it, hold it to charge. No cooldown.
+Right-click picks a spell, left-click casts it, hold it to charge.
 '''
 
 [[dependencies.${mod_id}]]

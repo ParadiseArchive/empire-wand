@@ -74,6 +74,10 @@ public class SpellbookScreen extends Screen {
             if (has) g.blit(WheelScreen.icon(spell), x, y, x + 16, y + 16, 0, 1, 0, 1);
             else g.text(font, "?", x + 5, y + 4, FADED, false);
             g.text(font, has ? Component.translatable("spell.empirewand." + spell.id()) : Component.literal("???"), x + 20, y + 4, has ? INK : FADED, false);
+            if (has) { // its cooldown, at the right
+                String cooldown = String.format(java.util.Locale.ROOT, "%.1f s", spell.cooldown / 20f);
+                g.text(font, cooldown, x + CELL_W - font.width(cooldown), y + 4, FADED, false);
+            }
             Component text = has ? Component.translatable("spell.empirewand." + spell.id() + ".desc")
                     : Component.translatable("screen.empirewand.spellbook.found", places(spell));
             g.textWithWordWrap(font, text, x, y + 19, CELL_W, has ? INK : FADED);
