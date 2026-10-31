@@ -1,12 +1,7 @@
 {
   "itemGroup.empirewand": "Empire Wand",
   "item.empirewand.empire_wand": "Empire Wand",
-  "item.empirewand.blood_magic": "Blood Magic",
-  "item.empirewand.frost_wand": "Frost Wand",
-  "item.empirewand.void_wand": "Void Wand",
-  "item.empirewand.nature_wand": "Nature Wand",
   "message.empirewand.selected": "[X] Selected: %s",
-  "message.empirewand.no_blood": "Not enough blood left to give.",
   "item.empirewand.spell_scroll": "Spell Scroll",
   "item.empirewand.spell_scroll.of": "Spell Scroll: %s",
   "message.empirewand.learned": "[X] Your %s learned %s!",

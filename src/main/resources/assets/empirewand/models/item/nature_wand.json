@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:item/handheld",
-  "textures": {
-    "layer0": "empirewand:item/nature_wand",
-    "layer1": "empirewand:item/nature_wand_crystal"
-  }
-}

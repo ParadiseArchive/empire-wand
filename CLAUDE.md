@@ -27,13 +27,16 @@ What changed from 2013, and why:
 - Comet never exploded in 2013 either (small fireballs do not explode): it is a fast fireball with a big orange firework.
 - No fall damage after Leap, Jump and Escape (the plugin set the fall distance to minus ten million).
 
+## One wand (owner, 31 Oct 2026)
+Only the Empire Wand: Blood Magic, Frost, Void and Nature are gone, their spells are on the Empire Wand (30 in all, Spell.EMPIRE: the fifteen from 2013, Meteor Shower, Chain Lightning, Earthquake, Tornado, Blood Wave, Blood Spark, Ice Wave, Freeze, Blizzard, Blink, Black Hole, Levitate, Roots, Spores, Overgrowth). No blood price: every spell is free. A new wand knows the first four; scrolls teach the rest. The wheel has two rings (68 and 116).
+
 ## Backlog
 - [ ] Playtest in the game with the owner (above all the 3D wand in the hand: the 45 degree tilt and the display transforms were not seen yet).
 - Ideas only when the owner asks.
 - [x] Pimp it up (owner, 31 Oct 2026: yes to all of these, built in this order, not playtested yet):
   1. Looks: items/<wand>.json selects by display context: a flat icon (gui, ground, fixed: layer0 rod, layer1 grey crystal) or a 3D model (<wand>_3d: boxes tilted 45 degrees, vanilla handheld display); the crystal is tinted from custom model data (WandItem.select sets the spell's colour; tint index 1); isFoil; Fx.beam from Spells.tip; Spells.castSound per spell.
   2. Spell wheel: client/WheelScreen (key R, KeyMapping in GAMEPLAY), a ring of buttons with icons (textures/gui/spell/<id>.png, 8 x 8 drawn twice the size), SelectSpell payload; sneak and scroll (MouseScrollingEvent) goes to the next known spell.
-  3. Blood Magic: Spells.cast(player, spell, blood): costs BLOOD_PRICE 1 health straight off (a hurt would give half a second of no damage: spamming free), not in creative, not with 1 health left; stronger: Blood Spark 7, Blood Wave 6, Blood Block blast 7.
+  3. (Removed with the other wands, 31 Oct 2026.) Blood Magic: Spells.cast(player, spell, blood): costs BLOOD_PRICE 1 health straight off (a hurt would give half a second of no damage: spamming free), not in creative, not with 1 health left; stronger: Blood Spark 7, Blood Wave 6, Blood Block blast 7.
   4. Empire Wand: METEOR_SHOWER (12 large fireballs, power 2), CHAIN_LIGHTNING (6 damage, 5 leaps within 8), EARTHQUAKE (rings 2-10 of falling blocks, 4 damage), TORNADO (6 s, pulls round and up, flings at the end).
   5. FROST_WAND (ICE_WAVE: frosted ice, slowness, freeze damage; FREEZE: ticks frozen + slowness 10; BLIZZARD: 8 s, snow layers), VOID_WAND (BLINK 40 blocks; BLACK_HOLE: pulls within 10 for 4 s, blast 4; LEVITATE: levitation + up to 12 floating blocks), NATURE_WAND (ROOTS: slowness 10 + jump boost 128; SPORES: an area effect cloud of poison and weakness; OVERGROWTH: bone meal in radius 5). Recipes with breeze rods, moss, saplings.
   6. Scrolls: component KNOWN (a bit per place in the wand's list, default the first ones (WandItem.starters): Empire 4, the others 1); ScrollItem (component SCROLL_SPELL, ribbon tinted), right-click teaches the wand in the other hand or the inventory; ScrollsModifier (loot_modifiers/scrolls.json) in 13 kinds of chest; the wheel shows ? for the rest; creative tab has every scroll.

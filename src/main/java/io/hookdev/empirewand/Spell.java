@@ -17,13 +17,12 @@ public enum Spell {
     ICE_WAVE(0x9FE8FF), FREEZE(0xBFF4FF), BLIZZARD(0xE8F8FF), BLINK(0x7A3CFF), BLACK_HOLE(0x4A1A70), LEVITATE(0xD8B0FF),
     ROOTS(0x6B8E23), SPORES(0x9ACD32), OVERGROWTH(0x2E8B57);
 
-    /** The Empire Wand's: the fifteen from 2013 (owner, 31 Oct 2026: Flamethrower and Ender Egg are gone), and four new ones. */
+    /**
+     * The Empire Wand's, the only wand (owner, 31 Oct 2026): the fifteen from 2013 (Flamethrower and Ender Egg are gone),
+     * then the new ones, among them those of the wands that were (Blood Magic, Frost, Void, Nature).
+     */
     public static final List<Spell> EMPIRE = List.of(EXPLODE, LIGHTNING_ARROW, ESCAPE, LAUNCH, LEAP, CONFUSE, CAPTURE, LITTLE_SPARK, COMET, SPARK, JUMP, POISON_WAVE, EXPLOSIVE, BLOOD_BLOCK, LIGHTNING_STORM,
-            METEOR_SHOWER, CHAIN_LIGHTNING, EARTHQUAKE, TORNADO);
-    /** Blood Magic's three. */
-    public static final List<Spell> BLOOD = List.of(BLOOD_WAVE, BLOOD_SPARK, BLOOD_BLOCK);
-    /** The three newer wands (owner, 31 Oct 2026), three spells each. */
-    public static final List<Spell> FROST = List.of(ICE_WAVE, FREEZE, BLIZZARD), VOID = List.of(BLINK, BLACK_HOLE, LEVITATE), NATURE = List.of(ROOTS, SPORES, OVERGROWTH);
+            METEOR_SHOWER, CHAIN_LIGHTNING, EARTHQUAKE, TORNADO, BLOOD_WAVE, BLOOD_SPARK, ICE_WAVE, FREEZE, BLIZZARD, BLINK, BLACK_HOLE, LEVITATE, ROOTS, SPORES, OVERGROWTH);
 
     /** Its colour, 0xRRGGBB. */
     public final int colour;

@@ -86,40 +86,7 @@ const WANDS = {
     // the 3D wand's colours: handle, band (and pommel), grip
     handle: ['#2a1c18', '#4a332a'], band: ['#b8862a', '#ffd23f'], grip: ['#5a1a1a', '#7a2626'],
   },
-  blood_magic: {
-    first: 0x8B0000,
-    icon: [
-      '..........oOo...',
-      '.........oOPOo..',
-      '.........OOOOo..',
-      '.........oOOo...',
-      '..........ob....',
-      '.........bB..d..',
-      '........bB......',
-      '.......bB....d..',
-      '......cC........',
-      '.....bB.........',
-      '....bB..........',
-      '...cC...........',
-      '..bB............',
-      '.bB.............',
-      '.c..............',
-      '................',
-    ],
-    rod: { b: '#cfc6b0', B: '#efe8d6', c: '#8a1520', C: '#c0202f', d: '#5a0010' },
-    crystal: { o: '#5a5a5a', O: '#b0b0b0', P: '#ffffff' },
-    handle: ['#cfc6b0', '#efe8d6'], band: ['#8a1520', '#c0202f'], grip: ['#5a0010', '#8a1520'],
-  },
 };
-const SHAPE = WANDS.empire_wand.icon;
-Object.assign(WANDS, {
-  frost_wand: { first: 0x9FE8FF, icon: SHAPE, rod: { g: '#5a8fb8', G: '#9fe8ff', d: '#9fb8c8', D: '#d8e8f0', k: '#40606f' }, crystal: { r: '#6e6e6e', R: '#c4c4c4', W: '#ffffff' },
-    handle: ['#9fb8c8', '#d8e8f0'], band: ['#5a8fb8', '#9fe8ff'], grip: ['#40606f', '#5a8fb8'] },
-  void_wand: { first: 0x7A3CFF, icon: SHAPE, rod: { g: '#5a2a8a', G: '#9a5aff', d: '#1a1028', D: '#2e1a48', k: '#0a0610' }, crystal: { r: '#6e6e6e', R: '#c4c4c4', W: '#ffffff' },
-    handle: ['#1a1028', '#2e1a48'], band: ['#5a2a8a', '#9a5aff'], grip: ['#0a0610', '#1a1028'] },
-  nature_wand: { first: 0x6B8E23, icon: SHAPE, rod: { g: '#2e7d32', G: '#66bb6a', d: '#5a3a1e', D: '#7a5230', k: '#3a2410' }, crystal: { r: '#6e6e6e', R: '#c4c4c4', W: '#ffffff' },
-    handle: ['#5a3a1e', '#7a5230'], band: ['#2e7d32', '#66bb6a'], grip: ['#3a2410', '#5a3a1e'] },
-});
 for (const [name, wand] of Object.entries(WANDS)) {
   picture('item/' + name, wand.icon, wand.rod);
   picture('item/' + name + '_crystal', wand.icon, wand.crystal);
@@ -246,10 +213,6 @@ json(join(DATA, 'loot_modifiers/scrolls.json'), { type: 'empirewand:scrolls' });
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
 shaped('empire_wand', ['  D', ' B ', 'G  '], { D: 'minecraft:diamond', B: 'minecraft:blaze_rod', G: 'minecraft:gold_ingot' });
-shaped('blood_magic', ['  W', ' B ', 'R  '], { W: 'minecraft:nether_wart', B: 'minecraft:bone', R: 'minecraft:redstone_block' });
-shaped('frost_wand', ['  P', ' B ', 'S  '], { P: 'minecraft:packed_ice', B: 'minecraft:breeze_rod', S: 'minecraft:snowball' });
-shaped('void_wand', ['  E', ' B ', 'O  '], { E: 'minecraft:ender_eye', B: 'minecraft:breeze_rod', O: 'minecraft:crying_obsidian' });
-shaped('nature_wand', ['  M', ' S ', 'P  '], { M: 'minecraft:moss_block', S: 'minecraft:stick', P: 'minecraft:oak_sapling' });
 
 // ---------- English ----------
 const SPELLS = {
@@ -264,10 +227,7 @@ const SPELLS = {
 json(join(ASSETS, 'lang/en_us.json'), {
   'itemGroup.empirewand': 'Empire Wand',
   'item.empirewand.empire_wand': 'Empire Wand',
-  'item.empirewand.blood_magic': 'Blood Magic',
-  'item.empirewand.frost_wand': 'Frost Wand', 'item.empirewand.void_wand': 'Void Wand', 'item.empirewand.nature_wand': 'Nature Wand',
   'message.empirewand.selected': '[X] Selected: %s',
-  'message.empirewand.no_blood': 'Not enough blood left to give.',
   'item.empirewand.spell_scroll': 'Spell Scroll', 'item.empirewand.spell_scroll.of': 'Spell Scroll: %s',
   'message.empirewand.learned': '[X] Your %s learned %s!',
   'message.empirewand.cannot_learn': '[X] None of your wands can learn %s (or it knows it already).',

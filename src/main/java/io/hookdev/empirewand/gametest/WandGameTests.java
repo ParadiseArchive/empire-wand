@@ -46,7 +46,6 @@ public final class WandGameTests {
         test("blood_block_takes_two_clicks", WandGameTests::bloodBlockTakesTwoClicks, 100);
         test("capture_picks_it_up_and_throws_it", WandGameTests::capturePicksItUpAndThrowsIt, 20);
         test("confuse_makes_it_dizzy", WandGameTests::confuseMakesItDizzy, 20);
-        test("blood_magic_costs_blood", WandGameTests::bloodMagicCostsBlood, 20);
         test("a_scroll_teaches_a_spell", WandGameTests::aScrollTeachesASpell, 20);
         test("scrolls_turn_up_in_chests", WandGameTests::scrollsTurnUpInChests, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
@@ -102,12 +101,11 @@ public final class WandGameTests {
         helper.assertTrue(item.learn(wand, Spell.COMET) && !item.learn(wand, Spell.COMET), "a scroll teaches it Comet, once");
         for (int i = 0; i < 4; i++) item.next(wand, player);
         helper.assertTrue(item.spell(wand) == Spell.COMET, "Comet is in the round now, it skips what it does not know");
-        helper.assertFalse(item.learn(wand, Spell.FREEZE), "Freeze is not an Empire Wand spell");
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.BLOOD_MAGIC.get()));
-        Content.BLOOD_MAGIC.get().learn(player.getMainHandItem(), Spell.BLOOD_SPARK);
+        helper.assertFalse(item.learn(wand, Spell.EXPLODE), "it knows Explode already");
+        player.setItemInHand(InteractionHand.MAIN_HAND, wand);
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
-        helper.assertTrue(Content.BLOOD_MAGIC.get().spell(player.getMainHandItem()) == Spell.BLOOD_SPARK, "Blood Magic: Blood Wave, then Blood Spark");
-        helper.assertTrue(player.getMainHandItem().getHoverName().getString().contains("Blood Spark"), "its name says which");
+        helper.assertTrue(item.spell(player.getMainHandItem()) == Spell.EXPLODE, "right-click: from Comet round to Explode");
+        helper.assertTrue(player.getMainHandItem().getHoverName().getString().contains("Explode"), "its name says which");
         helper.succeed();
     }
 
@@ -167,28 +165,16 @@ public final class WandGameTests {
         helper.succeed();
     }
 
-    private static void bloodMagicCostsBlood(GameTestHelper helper) {
-        wall(helper);
-        ServerPlayer player = caster(helper);
-        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL); // in creative blood is free
-        float full = player.getHealth();
-        Spells.cast(player, Spell.BLOOD_SPARK, true);
-        helper.assertTrue(full - player.getHealth() == Spells.BLOOD_PRICE, "half a heart, it cost " + (full - player.getHealth()));
-        player.setHealth(Spells.BLOOD_PRICE);
-        Spells.cast(player, Spell.BLOOD_SPARK, true);
-        helper.assertTrue(player.isAlive() && player.getHealth() == Spells.BLOOD_PRICE, "with half a heart left: no blood to give, and alive");
-        helper.succeed();
-    }
-
     private static void aScrollTeachesASpell(GameTestHelper helper) {
         ServerPlayer player = caster(helper);
         player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL); // so the scroll is used up
-        ItemStack wand = new ItemStack(Content.FROST_WAND.get());
+        ItemStack wand = new ItemStack(Content.EMPIRE_WAND.get());
+        int blizzard = Spell.EMPIRE.indexOf(Spell.BLIZZARD);
         player.setItemInHand(InteractionHand.OFF_HAND, wand);
         player.setItemInHand(InteractionHand.MAIN_HAND, io.hookdev.empirewand.ScrollItem.of(Spell.BLIZZARD));
-        helper.assertFalse(Content.FROST_WAND.get().knows(wand, 2), "a new Frost Wand does not know Blizzard");
+        helper.assertFalse(Content.EMPIRE_WAND.get().knows(wand, blizzard), "a new wand does not know Blizzard");
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
-        helper.assertTrue(Content.FROST_WAND.get().knows(player.getOffhandItem(), 2), "the scroll teaches it Blizzard");
+        helper.assertTrue(Content.EMPIRE_WAND.get().knows(player.getOffhandItem(), blizzard), "the scroll teaches it Blizzard");
         helper.assertTrue(player.getMainHandItem().isEmpty(), "and is used up");
         helper.succeed();
     }

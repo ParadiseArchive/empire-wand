@@ -39,9 +39,13 @@ public class WheelScreen extends Screen {
         List<Spell> spells = wand.spells();
         cx = width / 2;
         cy = height / 2;
-        radius = Math.max(36, spells.size() * 6);
+        // two rings: the first half of its spells inside, the rest round them (each from the top, round clockwise)
+        int inner = (spells.size() + 1) / 2;
         for (int i = 0; i < spells.size(); i++) {
-            double angle = -Math.PI / 2 + 2 * Math.PI * i / spells.size(); // the first at the top, round clockwise
+            boolean outer = i >= inner;
+            int count = outer ? spells.size() - inner : inner, place = outer ? i - inner : i;
+            radius = outer ? 116 : 68;
+            double angle = -Math.PI / 2 + 2 * Math.PI * (place + (outer ? 0.5 : 0)) / count;
             int x = cx + (int) Math.round(Math.cos(angle) * radius) - SIZE / 2, y = cy + (int) Math.round(Math.sin(angle) * radius) - SIZE / 2;
             int index = i;
             boolean known = wand.knows(stack, i);
@@ -78,8 +82,7 @@ public class WheelScreen extends Screen {
         // in the middle: the spell under the mouse, or the one it has now
         Spell shown = current;
         for (int i = 0; i < buttons.size(); i++) if (buttons.get(i).isHovered() && wand.knows(stack, i)) shown = spells.get(i);
-        g.centeredText(font, stack.getItem().getName(stack).copy().withStyle(net.minecraft.ChatFormatting.RED), cx, cy - 14, 0xFFFFFFFF);
-        g.centeredText(font, shown.displayName(), cx, cy, 0xFFFFFFFF);
+        g.centeredText(font, shown.displayName(), cx, cy - 4, 0xFFFFFFFF);
     }
 
     @Override

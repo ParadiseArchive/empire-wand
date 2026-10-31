@@ -13,7 +13,7 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.List;
 
-/** The two wands, the spell a wand has selected, and a creative tab. */
+/** The Empire Wand, the spell it has selected and the ones it knows, spell scrolls, and a creative tab. */
 public final class Content {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(EmpireWand.MODID);
     private static final DeferredRegister.DataComponents COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, EmpireWand.MODID);
@@ -32,10 +32,6 @@ public final class Content {
             builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DeferredItem<WandItem> EMPIRE_WAND = ITEMS.registerItem("empire_wand", p -> new WandItem(p, Spell.EMPIRE, 4), p -> p.stacksTo(1));
-    public static final DeferredItem<WandItem> BLOOD_MAGIC = ITEMS.registerItem("blood_magic", p -> new WandItem(p, Spell.BLOOD, 1), p -> p.stacksTo(1));
-    public static final DeferredItem<WandItem> FROST_WAND = ITEMS.registerItem("frost_wand", p -> new WandItem(p, Spell.FROST, 1), p -> p.stacksTo(1));
-    public static final DeferredItem<WandItem> VOID_WAND = ITEMS.registerItem("void_wand", p -> new WandItem(p, Spell.VOID, 1), p -> p.stacksTo(1));
-    public static final DeferredItem<WandItem> NATURE_WAND = ITEMS.registerItem("nature_wand", p -> new WandItem(p, Spell.NATURE, 1), p -> p.stacksTo(1));
     public static final DeferredItem<ScrollItem> SPELL_SCROLL = ITEMS.registerItem("spell_scroll", ScrollItem::new, p -> p.stacksTo(16).rarity(net.minecraft.world.item.Rarity.RARE));
 
     static {
@@ -44,7 +40,7 @@ public final class Content {
 
     /** All the wands. */
     public static List<WandItem> wands() {
-        return List.of(EMPIRE_WAND.get(), BLOOD_MAGIC.get(), FROST_WAND.get(), VOID_WAND.get(), NATURE_WAND.get());
+        return List.of(EMPIRE_WAND.get());
     }
 
     static {
@@ -53,10 +49,6 @@ public final class Content {
                 .icon(() -> new ItemStack(EMPIRE_WAND.get()))
                 .displayItems((parameters, output) -> {
                     output.accept(EMPIRE_WAND.get());
-                    output.accept(BLOOD_MAGIC.get());
-                    output.accept(FROST_WAND.get());
-                    output.accept(VOID_WAND.get());
-                    output.accept(NATURE_WAND.get());
                     for (Spell spell : ScrollItem.findable()) output.accept(ScrollItem.of(spell));
                 })
                 .build());
