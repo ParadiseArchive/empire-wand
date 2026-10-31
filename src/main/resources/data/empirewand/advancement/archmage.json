@@ -1,0 +1,22 @@
+{
+  "parent": "empirewand:apprentice",
+  "display": {
+    "icon": {
+      "id": "empirewand:empire_wand"
+    },
+    "title": {
+      "translate": "advancements.empirewand.archmage.title"
+    },
+    "description": {
+      "translate": "advancements.empirewand.archmage.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

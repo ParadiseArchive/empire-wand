@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "empirewand:empire_wand"
+    },
+    "title": {
+      "translate": "advancements.empirewand.root.title"
+    },
+    "description": {
+      "translate": "advancements.empirewand.root.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "background": "minecraft:gui/advancements/backgrounds/stone"
+  },
+  "criteria": {
+    "wand": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "empirewand:empire_wand"
+          }
+        ]
+      }
+    }
+  }
+}

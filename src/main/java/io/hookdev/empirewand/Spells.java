@@ -53,8 +53,16 @@ public final class Spells {
 
     private Spells() {}
 
+    /** When each player's last Black Hole and Tornado end (both at once: an advancement). */
+    private static final Map<UUID, Long> HOLES = new HashMap<>(), TORNADOES = new HashMap<>();
+
     public static void cast(ServerPlayer player, Spell spell) {
         ServerLevel level = (ServerLevel) player.level();
+        Awards.cast(player, spell);
+        long now = level.getGameTime();
+        if (spell == Spell.BLACK_HOLE) HOLES.put(player.getUUID(), now + 80);
+        if (spell == Spell.TORNADO) TORNADOES.put(player.getUUID(), now + 120);
+        if (HOLES.getOrDefault(player.getUUID(), 0L) > now && TORNADOES.getOrDefault(player.getUUID(), 0L) > now) Awards.award(player, "end_of_days");
         level.playSound(null, player.getX(), player.getY(), player.getZ(), castSound(spell), SoundSource.PLAYERS, 0.8f, 1);
         switch (spell) {
             case EXPLODE -> explode(player, level);

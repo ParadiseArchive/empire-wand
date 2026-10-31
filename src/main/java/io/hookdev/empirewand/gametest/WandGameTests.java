@@ -178,6 +178,8 @@ public final class WandGameTests {
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.assertTrue(Content.EMPIRE_WAND.get().knows(player.getOffhandItem(), blizzard), "the scroll teaches it Blizzard");
         helper.assertTrue(player.getMainHandItem().isEmpty(), "and is used up");
+        var bookworm = helper.getLevel().getServer().getAdvancements().get(io.hookdev.empirewand.EmpireWand.id("bookworm"));
+        helper.assertTrue(bookworm != null && player.getAdvancements().getOrStartProgress(bookworm).isDone(), "and the Bookworm advancement is in");
         helper.succeed();
     }
 

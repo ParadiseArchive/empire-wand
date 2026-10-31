@@ -235,6 +235,21 @@ picture('item/spellbook', [
 json(join(ASSETS, 'models/item/spellbook.json'), { parent: 'minecraft:item/generated', textures: { layer0: 'empirewand:item/spellbook' } });
 json(join(ASSETS, 'items/spellbook.json'), { model: { type: 'minecraft:model', model: 'empirewand:item/spellbook' } });
 
+// ---------- advancements: the root comes with the wand, the others are awarded in Awards.java ----------
+const advancement = (id, parent, icon, title, description, frame, criteria) => json(join(DATA, 'advancement', id + '.json'), {
+  ...(parent ? { parent: 'empirewand:' + parent } : {}),
+  display: { icon: { id: icon }, title: { translate: 'advancements.empirewand.' + id + '.title' }, description: { translate: 'advancements.empirewand.' + id + '.description' },
+    frame, show_toast: true, announce_to_chat: parent !== null, ...(parent ? {} : { background: 'minecraft:gui/advancements/backgrounds/stone' }) },
+  criteria: criteria || { done: { trigger: 'minecraft:impossible' } },
+});
+advancement('root', null, 'empirewand:empire_wand', 'Empire Wand', 'Get an Empire Wand', 'task',
+  { wand: { trigger: 'minecraft:inventory_changed', conditions: { items: [{ items: 'empirewand:empire_wand' }] } } });
+advancement('bookworm', 'root', 'empirewand:spell_scroll', null, null, 'task');
+advancement('apprentice', 'bookworm', 'empirewand:spellbook', null, null, 'goal');
+advancement('archmage', 'apprentice', 'empirewand:empire_wand', null, null, 'challenge');
+advancement('pyromaniac', 'root', 'minecraft:tnt', null, null, 'goal');
+advancement('end_of_days', 'root', 'minecraft:dragon_egg', null, null, 'challenge');
+
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
@@ -256,6 +271,12 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'item.empirewand.spellbook': 'Spellbook',
+  'advancements.empirewand.root.title': 'Empire Wand', 'advancements.empirewand.root.description': 'Get an Empire Wand',
+  'advancements.empirewand.bookworm.title': "Bookworm", 'advancements.empirewand.bookworm.description': "Learn a spell from a scroll",
+  'advancements.empirewand.apprentice.title': "Apprentice", 'advancements.empirewand.apprentice.description': "Have a wand that knows ten spells",
+  'advancements.empirewand.archmage.title': "Archmage", 'advancements.empirewand.archmage.description': "Have a wand that knows all thirty spells",
+  'advancements.empirewand.pyromaniac.title': "Pyromaniac", 'advancements.empirewand.pyromaniac.description': "Blow things up a hundred times with your wand",
+  'advancements.empirewand.end_of_days.title': "The End of Days", 'advancements.empirewand.end_of_days.description': "Have a Black Hole and a Tornado going at the same time",
   'screen.empirewand.spellbook': 'Spellbook', 'screen.empirewand.spellbook.title': 'Spellbook: %s of %s known',
   'screen.empirewand.spellbook.found': 'Found in %s', 'screen.empirewand.spellbook.more': ', and more',
   'spell.empirewand.explode.desc': "A blast of 5 where you look, up to 50 blocks away.",

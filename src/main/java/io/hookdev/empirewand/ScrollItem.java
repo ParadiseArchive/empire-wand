@@ -73,6 +73,7 @@ public class ScrollItem extends Item {
         for (ItemStack stack : wands) {
             if (!(stack.getItem() instanceof WandItem wand) || !wand.learn(stack, spell)) continue;
             if (!player.getAbilities().instabuild) scroll.shrink(1);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) Awards.learned(serverPlayer, Integer.bitCount(wand.known(stack)), wand.spells().size());
             player.sendOverlayMessage(Component.translatable("message.empirewand.learned", wand.getName(new ItemStack(wand)).copy().withStyle(ChatFormatting.RED), spell.displayName()).withStyle(ChatFormatting.GOLD));
             server.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1, 1);
             server.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.2, player.getZ(), 60, 0.6, 0.8, 0.6, 0.6);
