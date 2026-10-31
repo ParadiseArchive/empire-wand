@@ -53,6 +53,7 @@ public final class WandGameTests {
         test("a_frozen_one_shatters", WandGameTests::aFrozenOneShatters, 20);
         test("a_charged_cast_hits_harder", WandGameTests::aChargedCastHitsHarder, 40);
         test("power_makes_it_stronger", WandGameTests::powerMakesItStronger, 20);
+        test("a_gold_block_makes_it_gold", WandGameTests::aGoldBlockMakesItGold, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -272,6 +273,19 @@ public final class WandGameTests {
         float full = pig.getHealth();
         Spells.cast(player, Spell.SPARK, 1);
         helper.assertTrue(full - pig.getHealth() > 3, "Power III: a Spark does more than 3, it did " + (full - pig.getHealth()));
+        helper.succeed();
+    }
+
+    private static void aGoldBlockMakesItGold(GameTestHelper helper) {
+        ServerPlayer player = caster(helper);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.EMPIRE_WAND.get()));
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(net.minecraft.world.item.Items.GOLD_BLOCK));
+        player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        helper.assertTrue(player.getMainHandItem().getOrDefault(Content.SKIN.get(), 0) == 1, "sneak and right-click with a gold block: a gold wand");
+        helper.assertTrue(player.getOffhandItem().isEmpty(), "the gold block is used up");
+        helper.assertTrue(Content.EMPIRE_WAND.get().spell(player.getMainHandItem()) == Spell.EXPLODE, "and the spell did not change");
         helper.succeed();
     }
 

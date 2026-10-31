@@ -30,6 +30,9 @@ public final class Content {
     /** The wand's favourites: the spell (its place in the list, -1 for none) on each of the number keys 1 to 5. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.List<Integer>>> FAVOURITES = COMPONENTS.registerComponentType("favourites",
             builder -> builder.persistent(Codec.INT.listOf()).networkSynchronized(ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list())));
+    /** The wand's skin (owner, 31 Oct 2026): 0 classic, 1 gold, 2 obsidian, 3 bone. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SKIN = COMPONENTS.registerComponentType("skin",
+            builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
     /** The spell on a scroll (its Spell ordinal). */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SCROLL_SPELL = COMPONENTS.registerComponentType("scroll_spell",
             builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));

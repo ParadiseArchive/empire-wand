@@ -1,45 +1,190 @@
 {
   "model": {
     "type": "minecraft:select",
-    "property": "minecraft:display_context",
+    "property": "minecraft:component",
+    "component": "empirewand:skin",
     "cases": [
       {
-        "when": [
-          "gui",
-          "ground",
-          "fixed"
-        ],
+        "when": 1,
         "model": {
-          "type": "minecraft:model",
-          "model": "empirewand:item/empire_wand",
-          "tints": [
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
             {
-              "type": "minecraft:constant",
-              "value": -1
-            },
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": 16053492
+              "when": [
+                "gui",
+                "ground",
+                "fixed"
+              ],
+              "model": {
+                "type": "minecraft:model",
+                "model": "empirewand:item/empire_wand_gold",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:custom_model_data",
+                    "index": 0,
+                    "default": 16053492
+                  }
+                ]
+              }
             }
-          ]
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "empirewand:item/empire_wand_gold_3d",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": 16053492
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": 2,
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "gui",
+                "ground",
+                "fixed"
+              ],
+              "model": {
+                "type": "minecraft:model",
+                "model": "empirewand:item/empire_wand_obsidian",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:custom_model_data",
+                    "index": 0,
+                    "default": 16053492
+                  }
+                ]
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "empirewand:item/empire_wand_obsidian_3d",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": 16053492
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": 3,
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "gui",
+                "ground",
+                "fixed"
+              ],
+              "model": {
+                "type": "minecraft:model",
+                "model": "empirewand:item/empire_wand_bone",
+                "tints": [
+                  {
+                    "type": "minecraft:constant",
+                    "value": -1
+                  },
+                  {
+                    "type": "minecraft:custom_model_data",
+                    "index": 0,
+                    "default": 16053492
+                  }
+                ]
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "empirewand:item/empire_wand_bone_3d",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": 16053492
+              }
+            ]
+          }
         }
       }
     ],
     "fallback": {
-      "type": "minecraft:model",
-      "model": "empirewand:item/empire_wand_3d",
-      "tints": [
+      "type": "minecraft:select",
+      "property": "minecraft:display_context",
+      "cases": [
         {
-          "type": "minecraft:constant",
-          "value": -1
-        },
-        {
-          "type": "minecraft:custom_model_data",
-          "index": 0,
-          "default": 16053492
+          "when": [
+            "gui",
+            "ground",
+            "fixed"
+          ],
+          "model": {
+            "type": "minecraft:model",
+            "model": "empirewand:item/empire_wand",
+            "tints": [
+              {
+                "type": "minecraft:constant",
+                "value": -1
+              },
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": 16053492
+              }
+            ]
+          }
         }
-      ]
+      ],
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "empirewand:item/empire_wand_3d",
+        "tints": [
+          {
+            "type": "minecraft:constant",
+            "value": -1
+          },
+          {
+            "type": "minecraft:custom_model_data",
+            "index": 0,
+            "default": 16053492
+          }
+        ]
+      }
     }
   }
 }

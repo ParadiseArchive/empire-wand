@@ -87,6 +87,15 @@ const WANDS = {
     handle: ['#2a1c18', '#4a332a'], band: ['#b8862a', '#ffd23f'], grip: ['#5a1a1a', '#7a2626'],
   },
 };
+// skins (owner, 31 Oct 2026): the same wand in other colours; the crystal stays the spell's colour
+const SKINS = [null, // classic
+  { suffix: '_gold', rod: { g: '#fff3a0', G: '#ffffff', d: '#b8862a', D: '#ffd23f', k: '#8a5a10' }, handle: ['#b8862a', '#ffd23f'], band: ['#fff3a0', '#ffffff'], grip: ['#8a5a10', '#b8862a'] },
+  { suffix: '_obsidian', rod: { g: '#7a3cff', G: '#b45cff', d: '#140c1e', D: '#2a1838', k: '#0a0610' }, handle: ['#140c1e', '#2a1838'], band: ['#7a3cff', '#b45cff'], grip: ['#0a0610', '#140c1e'] },
+  { suffix: '_bone', rod: { g: '#8a1520', G: '#c0202f', d: '#cfc6b0', D: '#efe8d6', k: '#7a6a50' }, handle: ['#cfc6b0', '#efe8d6'], band: ['#8a1520', '#c0202f'], grip: ['#7a6a50', '#cfc6b0'] },
+];
+for (const [base, wand] of Object.entries(WANDS)) for (const skin of SKINS.filter(Boolean)) {
+  WANDS[base + skin.suffix] = { ...wand, rod: skin.rod, handle: skin.handle, band: skin.band, grip: skin.grip, skinOf: base };
+}
 for (const [name, wand] of Object.entries(WANDS)) {
   picture('item/' + name, wand.icon, wand.rod);
   picture('item/' + name + '_crystal', wand.icon, wand.crystal);
@@ -122,12 +131,21 @@ for (const [name, wand] of Object.entries(WANDS)) {
       head: { rotation: [0, 180, 0], translation: [0, 13, 7], scale: [1, 1, 1] },
     },
   });
+}
+// the item: by skin, then flat in the inventory or 3D in the hand
+for (const [name, wand] of Object.entries(WANDS)) {
+  if (wand.skinOf) continue;
   const tints = [{ type: 'minecraft:constant', value: -1 }, { type: 'minecraft:custom_model_data', index: 0, default: wand.first }];
+  const look = (model) => ({
+    type: 'minecraft:select', property: 'minecraft:display_context',
+    cases: [{ when: ['gui', 'ground', 'fixed'], model: { type: 'minecraft:model', model: 'empirewand:item/' + model, tints } }],
+    fallback: { type: 'minecraft:model', model: 'empirewand:item/' + model + '_3d', tints },
+  });
   json(join(ASSETS, 'items', name + '.json'), {
     model: {
-      type: 'minecraft:select', property: 'minecraft:display_context',
-      cases: [{ when: ['gui', 'ground', 'fixed'], model: { type: 'minecraft:model', model: 'empirewand:item/' + name, tints } }],
-      fallback: { type: 'minecraft:model', model: 'empirewand:item/' + name + '_3d', tints },
+      type: 'minecraft:select', property: 'minecraft:component', component: 'empirewand:skin',
+      cases: SKINS.map((skin, i) => skin && { when: i, model: look(name + skin.suffix) }).filter(Boolean),
+      fallback: look(name),
     },
   });
 }
@@ -291,6 +309,7 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'item.empirewand.spellbook': 'Spellbook',
+  'message.empirewand.skin': '[X] Your wand is %s now.', 'skin.empirewand.0': 'classic', 'skin.empirewand.1': 'gold', 'skin.empirewand.2': 'obsidian', 'skin.empirewand.3': 'bone',
   'enchantment.empirewand.power': 'Power', 'enchantment.empirewand.reach': 'Reach', 'enchantment.empirewand.multicast': 'Multicast',
   'message.empirewand.combo': 'COMBO: %s!', 'combo.empirewand.shatter': 'Shatter', 'combo.empirewand.storm': 'Storm', 'combo.empirewand.toxic_tornado': 'Toxic Tornado',
   'advancements.empirewand.combo.title': 'Combo!', 'advancements.empirewand.combo.description': 'Pull off a spell combo: Shatter, Storm or Toxic Tornado',

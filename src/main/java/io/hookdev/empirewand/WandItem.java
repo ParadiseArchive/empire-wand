@@ -99,9 +99,28 @@ public class WandItem extends Item {
         return spell;
     }
 
+    /** The skins: what to hold in the other hand (sneak and right-click) for each; a stick makes it classic again. */
+    public static final java.util.List<net.minecraft.world.item.Item> SKINS = java.util.List.of(net.minecraft.world.item.Items.STICK,
+            net.minecraft.world.item.Items.GOLD_BLOCK, net.minecraft.world.item.Items.OBSIDIAN, net.minecraft.world.item.Items.BONE_BLOCK);
+
+    /** Sneak and right-click with a skin's block in the other hand: the wand takes that skin (the block is used up). */
+    private boolean reskin(ItemStack wand, Player player, InteractionHand hand, ServerLevel server) {
+        ItemStack other = player.getItemInHand(hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+        int skin = -1;
+        for (int i = 0; i < SKINS.size(); i++) if (other.is(SKINS.get(i))) skin = i;
+        if (!player.isShiftKeyDown() || skin < 0 || wand.getOrDefault(Content.SKIN.get(), 0) == skin) return false;
+        wand.set(Content.SKIN.get(), skin);
+        if (!player.getAbilities().instabuild) other.shrink(1);
+        server.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SMITHING_TABLE_USE, SoundSource.PLAYERS, 1, 1);
+        server.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.2, player.getZ(), 40, 0.5, 0.6, 0.5, 0.5);
+        player.sendOverlayMessage(Component.translatable("message.empirewand.skin", Component.translatable("skin.empirewand." + skin)).withStyle(ChatFormatting.GOLD));
+        return true;
+    }
+
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (level instanceof ServerLevel server) {
+            if (reskin(player.getItemInHand(hand), player, hand, server)) return InteractionResult.SUCCESS;
             next(player.getItemInHand(hand), player);
             server.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1, 1.4f);
             server.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1, player.getZ(), 30, 0.4, 0.6, 0.4, 0.3);
