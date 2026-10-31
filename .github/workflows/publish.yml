@@ -26,7 +26,7 @@ permissions:
 
 env:
   # the CurseForge project id: fill it in once the project exists on CurseForge
-  CF_PROJECT: ''
+  CF_PROJECT: '1775325'
   CF_API: https://minecraft.curseforge.com/api
 
 jobs:
