@@ -31,7 +31,7 @@ public final class Content {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SCROLL_SPELL = COMPONENTS.registerComponentType("scroll_spell",
             builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
 
-    public static final DeferredItem<WandItem> EMPIRE_WAND = ITEMS.registerItem("empire_wand", p -> new WandItem(p, Spell.EMPIRE, 4), p -> p.stacksTo(1));
+    public static final DeferredItem<WandItem> EMPIRE_WAND = ITEMS.registerItem("empire_wand", p -> new WandItem(p, Spell.EMPIRE, 4), p -> p.stacksTo(1).enchantable(15));
     public static final DeferredItem<SpellbookItem> SPELLBOOK = ITEMS.registerItem("spellbook", SpellbookItem::new, p -> p.stacksTo(1));
     public static final DeferredItem<ScrollItem> SPELL_SCROLL = ITEMS.registerItem("spell_scroll", ScrollItem::new, p -> p.stacksTo(16).rarity(net.minecraft.world.item.Rarity.RARE));
 

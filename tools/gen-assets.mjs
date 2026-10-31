@@ -252,6 +252,24 @@ advancement('archmage', 'apprentice', 'empirewand:empire_wand', null, null, 'cha
 advancement('pyromaniac', 'root', 'minecraft:tnt', null, null, 'goal');
 advancement('end_of_days', 'root', 'minecraft:dragon_egg', null, null, 'challenge');
 
+// ---------- the wand's enchantments: markers (no effects of their own), read in Spells.cast ----------
+json(join(DATA, 'tags/item/wands.json'), { values: ['empirewand:empire_wand'] });
+for (const [name, max, weight] of [['power', 3, 10], ['reach', 3, 5], ['multicast', 2, 2]]) {
+  json(join(DATA, 'enchantment', name + '.json'), {
+    anvil_cost: weight >= 10 ? 1 : weight >= 5 ? 2 : 4,
+    description: { translate: 'enchantment.empirewand.' + name },
+    effects: {},
+    max_cost: { base: 30, per_level_above_first: 10 },
+    max_level: max,
+    min_cost: { base: 5, per_level_above_first: 10 },
+    slots: ['mainhand'],
+    supported_items: '#empirewand:wands',
+    primary_items: '#empirewand:wands',
+    weight,
+  });
+}
+json(join(ROOT, 'data/minecraft/tags/enchantment/in_enchanting_table.json'), { replace: false, values: ['empirewand:power', 'empirewand:reach', 'empirewand:multicast'] });
+
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
@@ -273,6 +291,7 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.empire_wand': 'Empire Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'item.empirewand.spellbook': 'Spellbook',
+  'enchantment.empirewand.power': 'Power', 'enchantment.empirewand.reach': 'Reach', 'enchantment.empirewand.multicast': 'Multicast',
   'message.empirewand.combo': 'COMBO: %s!', 'combo.empirewand.shatter': 'Shatter', 'combo.empirewand.storm': 'Storm', 'combo.empirewand.toxic_tornado': 'Toxic Tornado',
   'advancements.empirewand.combo.title': 'Combo!', 'advancements.empirewand.combo.description': 'Pull off a spell combo: Shatter, Storm or Toxic Tornado',
   'advancements.empirewand.full_power.title': 'Full Power', 'advancements.empirewand.full_power.description': 'Hold left-click to cast a fully charged spell',

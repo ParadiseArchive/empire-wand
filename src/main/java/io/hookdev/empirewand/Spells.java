@@ -69,17 +69,46 @@ public final class Spells {
         return POWER.get();
     }
 
-    /** Casts a spell at this power (1, or CHARGED when left-click was held): bigger blasts, more damage, further, longer. */
+    /** How much further the wand reaches now (its Reach enchantment). */
+    private static final ThreadLocal<Float> REACH = ThreadLocal.withInitial(() -> 1f);
+
+    /** The level of one of the wand's enchantments (empirewand:power, reach, multicast) on the wand in the player's main hand. */
+    static int enchantment(ServerPlayer player, String name) {
+        var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ENCHANTMENT, EmpireWand.id(name));
+        return player.level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT).get(key)
+                .map(holder -> net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(holder, player.getMainHandItem())).orElse(0);
+    }
+
+    /**
+     * Casts a spell at this power (1, or CHARGED when left-click was held): bigger blasts, more damage, further, longer.
+     * The wand's enchantments (owner, 31 Oct 2026): Power adds 15% a level, Reach 25% a level to how far it reaches,
+     * Multicast gives a 20% chance a level that the spell goes off twice.
+     */
     public static void cast(ServerPlayer player, Spell spell, float power) {
+        power *= 1 + 0.15f * enchantment(player, "power");
+        float reach = 1 + 0.25f * enchantment(player, "reach");
+        int multicast = enchantment(player, "multicast");
+        if (multicast > 0 && player.getRandom().nextFloat() < 0.2f * multicast) {
+            float again = power;
+            Tasks.later(5, () -> {
+                if (player.isAlive() && !player.hasDisconnected()) cast(player, spell, again, reach);
+            });
+        }
+        cast(player, spell, power, reach);
+    }
+
+    private static void cast(ServerPlayer player, Spell spell, float power, float reach) {
+        REACH.set(reach);
         POWER.set(power);
         try {
-            if (power > 1) {
+            if (power >= CHARGED) {
                 Fx.particles((ServerLevel) player.level(), ParticleTypes.END_ROD, tip(player), 30, 0.3, 0.15);
                 Awards.award(player, "full_power");
             }
             castNow(player, spell);
         } finally {
             POWER.set(1f);
+            REACH.set(1f);
         }
     }
 
@@ -164,7 +193,7 @@ public final class Spells {
 
     /** The block the player looks at, up to range blocks away (or the spot in the air at that distance). */
     static BlockPos target(Player player, double range) {
-        HitResult hit = player.pick(range, 1, false);
+        HitResult hit = player.pick(range * REACH.get(), 1, false);
         return hit instanceof BlockHitResult block && hit.getType() == HitResult.Type.BLOCK ? block.getBlockPos() : BlockPos.containing(hit.getLocation());
     }
 

@@ -52,6 +52,7 @@ public final class WandGameTests {
         test("a_sealed_scroll_opens", WandGameTests::aSealedScrollOpens, 20);
         test("a_frozen_one_shatters", WandGameTests::aFrozenOneShatters, 20);
         test("a_charged_cast_hits_harder", WandGameTests::aChargedCastHitsHarder, 40);
+        test("power_makes_it_stronger", WandGameTests::powerMakesItStronger, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -254,6 +255,20 @@ public final class WandGameTests {
         float full = pig.getHealth();
         Spells.cast(player, Spell.SPARK, Spells.CHARGED);
         helper.assertTrue(full - pig.getHealth() > 3, "a charged Spark does more than 3, it did " + (full - pig.getHealth()));
+        helper.succeed();
+    }
+
+    private static void powerMakesItStronger(GameTestHelper helper) {
+        wall(helper);
+        ServerPlayer player = caster(helper);
+        ItemStack wand = new ItemStack(Content.EMPIRE_WAND.get());
+        var power = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, EmpireWand.id("power")));
+        wand.enchant(power, 3);
+        player.setItemInHand(InteractionHand.MAIN_HAND, wand);
+        Mob pig = helper.spawnWithNoFreeWill(type("pig"), new BlockPos(5, 0, 1));
+        float full = pig.getHealth();
+        Spells.cast(player, Spell.SPARK, 1);
+        helper.assertTrue(full - pig.getHealth() > 3, "Power III: a Spark does more than 3, it did " + (full - pig.getHealth()));
         helper.succeed();
     }
 
