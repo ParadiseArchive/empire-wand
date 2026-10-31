@@ -86,6 +86,20 @@ public final class ScrollsModifier implements IGlobalLootModifier {
         return Map.entry(Identifier.withDefaultNamespace(table), source);
     }
 
+    /**
+     * Where a spell's scroll can turn up, most likely first, as language keys (place.empirewand.<key>): the loot
+     * tables, the Ender Dragon for the heavy ones, a librarian's sealed scroll for the rest.
+     */
+    public static List<String> places(Spell spell) {
+        List<Map.Entry<Identifier, Source>> found = new ArrayList<>();
+        for (var entry : SOURCES.entrySet()) if (entry.getValue().spells().contains(spell)) found.add(entry);
+        found.sort((a, b) -> Float.compare(b.getValue().chance() / Math.max(1, b.getValue().spells().size()), a.getValue().chance() / Math.max(1, a.getValue().spells().size())));
+        List<String> places = new ArrayList<>();
+        for (var entry : found) places.add(entry.getKey().getPath().replace('/', '.'));
+        places.add(HEAVY.contains(spell) ? "ender_dragon" : "librarian");
+        return places;
+    }
+
     private ScrollsModifier() {}
 
     @Override

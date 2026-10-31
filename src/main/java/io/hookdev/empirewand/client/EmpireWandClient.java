@@ -23,6 +23,7 @@ public class EmpireWandClient {
 
     public EmpireWandClient(IEventBus modEventBus) {
         modEventBus.addListener((RegisterKeyMappingsEvent event) -> event.register(WHEEL));
+        io.hookdev.empirewand.SpellbookItem.open = () -> McVersionClient.setScreen(new SpellbookScreen());
         NeoForge.EVENT_BUS.addListener(EmpireWandClient::leftClick);
         NeoForge.EVENT_BUS.addListener(EmpireWandClient::scroll);
         NeoForge.EVENT_BUS.addListener((ClientTickEvent.Post event) -> {
