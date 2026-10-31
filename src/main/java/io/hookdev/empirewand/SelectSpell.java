@@ -28,7 +28,9 @@ public record SelectSpell(int index) implements CustomPacketPayload {
 
     public static void handle(SelectSpell message, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player) || !(player.getMainHandItem().getItem() instanceof WandItem wand)) return;
-        wand.select(player.getMainHandItem(), Math.floorMod(message.index(), wand.spells().size()), player);
+        int index = Math.floorMod(message.index(), wand.spells().size());
+        if (!wand.knows(player.getMainHandItem(), index)) return; // not learnt yet
+        wand.select(player.getMainHandItem(), index, player);
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7f, 1.6f);
     }
 }

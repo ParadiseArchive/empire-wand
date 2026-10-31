@@ -48,7 +48,8 @@ public class EmpireWandClient {
         var player = Minecraft.getInstance().player;
         if (player == null || !player.isShiftKeyDown() || !(player.getMainHandItem().getItem() instanceof WandItem) || event.getScrollDeltaY() == 0) return;
         event.setCanceled(true);
-        int now = player.getMainHandItem().getOrDefault(Content.SPELL.get(), 0);
-        ClientPacketDistributor.sendToServer(new SelectSpell(now + (event.getScrollDeltaY() > 0 ? -1 : 1)));
+        var stack = player.getMainHandItem();
+        WandItem wand = (WandItem) stack.getItem();
+        ClientPacketDistributor.sendToServer(new SelectSpell(wand.nextKnown(stack, stack.getOrDefault(Content.SPELL.get(), 0), event.getScrollDeltaY() > 0 ? -1 : 1)));
     }
 }

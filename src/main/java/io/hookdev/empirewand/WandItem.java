@@ -17,10 +17,43 @@ import net.minecraft.world.level.Level;
 /** A wand: right-click selects its next spell (the name shows which), left-click casts it (see CastSpell). */
 public class WandItem extends Item {
     private final List<Spell> spells;
+    /** How many of its spells (from the start of its list) a new wand knows; the rest come from scrolls. */
+    private final int starters;
 
-    public WandItem(Properties properties, List<Spell> spells) {
+    public WandItem(Properties properties, List<Spell> spells, int starters) {
         super(properties);
         this.spells = spells;
+        this.starters = starters;
+    }
+
+    public int starters() {
+        return starters;
+    }
+
+    /** The spells it knows: a bit for each place in its list. */
+    public int known(ItemStack stack) {
+        return stack.getOrDefault(Content.KNOWN.get(), (1 << starters) - 1);
+    }
+
+    public boolean knows(ItemStack stack, int index) {
+        return index >= 0 && index < spells.size() && (known(stack) >> index & 1) != 0;
+    }
+
+    /** Learns a spell from a scroll; false if it is not one of its spells, or it knew it already. */
+    public boolean learn(ItemStack stack, Spell spell) {
+        int index = spells.indexOf(spell);
+        if (index < 0 || knows(stack, index)) return false;
+        stack.set(Content.KNOWN.get(), known(stack) | 1 << index);
+        return true;
+    }
+
+    /** The next spell it knows, round from this place in its list (step 1 forward, -1 back). */
+    public int nextKnown(ItemStack stack, int from, int step) {
+        for (int k = 1; k <= spells.size(); k++) {
+            int i = Math.floorMod(from + k * step, spells.size());
+            if (knows(stack, i)) return i;
+        }
+        return 0;
     }
 
     public List<Spell> spells() {
@@ -29,12 +62,13 @@ public class WandItem extends Item {
 
     /** The spell it has selected (the first one on a new wand). */
     public Spell spell(ItemStack stack) {
-        return spells.get(Math.floorMod(stack.getOrDefault(Content.SPELL.get(), 0), spells.size()));
+        int index = Math.floorMod(stack.getOrDefault(Content.SPELL.get(), 0), spells.size());
+        return spells.get(knows(stack, index) ? index : 0);
     }
 
-    /** Selects the next spell and tells the player, above the hotbar. */
+    /** Selects the next spell it knows and tells the player, above the hotbar. */
     public Spell next(ItemStack stack, Player player) {
-        return select(stack, Math.floorMod(stack.getOrDefault(Content.SPELL.get(), 0) + 1, spells.size()), player);
+        return select(stack, nextKnown(stack, stack.getOrDefault(Content.SPELL.get(), 0), 1), player);
     }
 
     /** Selects this one of its spells: the crystal takes its colour (the item models tint it from custom model data). */

@@ -216,6 +216,32 @@ for (const [id, rows] of Object.entries(ICONS)) {
   picture('gui/spell/' + id, rows.flatMap((row) => { const wide = [...row].flatMap((c) => [c, c]).join(''); return [wide, wide]; }), key);
 }
 
+// ---------- the spell scroll: a parchment roll (layer 0) with a ribbon in the spell's colour (layer 1) ----------
+const SCROLL = [
+  '................',
+  '...PPPPPPPPP....',
+  '..PpPPPPPPPpP...',
+  '..PppppppppPP...',
+  '...PPPPPPPPP....',
+  '....PlllllP.....',
+  '....PllllllP....',
+  '....PRRRRRRP....',
+  '....PRRWRRRP....',
+  '....PRRRRRRP....',
+  '....PllllllP....',
+  '....PlllllP.....',
+  '...PPPPPPPPP....',
+  '..PpPPPPPPPpP...',
+  '..PppppppppPP...',
+  '...PPPPPPPPP....',
+];
+picture('item/spell_scroll', SCROLL, { P: '#d9c79a', p: '#a8935e', l: '#efe2bd' });
+picture('item/spell_scroll_ribbon', SCROLL, { R: '#b0b0b0', W: '#ffffff' });
+json(join(ASSETS, 'models/item/spell_scroll.json'), { parent: 'minecraft:item/generated', textures: { layer0: 'empirewand:item/spell_scroll', layer1: 'empirewand:item/spell_scroll_ribbon' } });
+json(join(ASSETS, 'items/spell_scroll.json'), { model: { type: 'minecraft:model', model: 'empirewand:item/spell_scroll',
+  tints: [{ type: 'minecraft:constant', value: -1 }, { type: 'minecraft:custom_model_data', index: 0, default: 0xFFFFFF }] } });
+json(join(DATA, 'loot_modifiers/scrolls.json'), { type: 'empirewand:scrolls' });
+
 // ---------- recipes (owner, 31 Oct 2026: the wands are crafted) ----------
 const shaped = (name, pattern, key) => json(join(DATA, 'recipe', name + '.json'),
   { type: 'minecraft:crafting_shaped', category: 'equipment', key, pattern, result: { count: 1, id: 'empirewand:' + name } });
@@ -242,6 +268,10 @@ json(join(ASSETS, 'lang/en_us.json'), {
   'item.empirewand.frost_wand': 'Frost Wand', 'item.empirewand.void_wand': 'Void Wand', 'item.empirewand.nature_wand': 'Nature Wand',
   'message.empirewand.selected': '[X] Selected: %s',
   'message.empirewand.no_blood': 'Not enough blood left to give.',
+  'item.empirewand.spell_scroll': 'Spell Scroll', 'item.empirewand.spell_scroll.of': 'Spell Scroll: %s',
+  'message.empirewand.learned': '[X] Your %s learned %s!',
+  'message.empirewand.cannot_learn': '[X] None of your wands can learn %s (or it knows it already).',
+  'screen.empirewand.unknown': '??? (find its scroll)',
   'key.empirewand.wheel': 'Spell wheel (with a wand in hand)',
   'screen.empirewand.wheel': 'Spell wheel',
   ...Object.fromEntries(Object.entries(SPELLS).map(([id, name]) => ['spell.empirewand.' + id, name])),

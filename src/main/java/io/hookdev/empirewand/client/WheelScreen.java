@@ -44,8 +44,11 @@ public class WheelScreen extends Screen {
             double angle = -Math.PI / 2 + 2 * Math.PI * i / spells.size(); // the first at the top, round clockwise
             int x = cx + (int) Math.round(Math.cos(angle) * radius) - SIZE / 2, y = cy + (int) Math.round(Math.sin(angle) * radius) - SIZE / 2;
             int index = i;
-            buttons.add(addRenderableWidget(Button.builder(Component.empty(), b -> choose(index)).bounds(x, y, SIZE, SIZE)
-                    .tooltip(Tooltip.create(spells.get(i).displayName())).build()));
+            boolean known = wand.knows(stack, i);
+            Button button = Button.builder(Component.empty(), b -> choose(index)).bounds(x, y, SIZE, SIZE)
+                    .tooltip(Tooltip.create(known ? spells.get(i).displayName() : Component.translatable("screen.empirewand.unknown"))).build();
+            button.active = known; // not learnt yet: find its scroll
+            buttons.add(addRenderableWidget(button));
         }
     }
 
@@ -69,11 +72,12 @@ public class WheelScreen extends Screen {
                 g.fill(b.getX() - 2, b.getY(), b.getX(), b.getY() + SIZE, c);
                 g.fill(b.getX() + SIZE, b.getY(), b.getX() + SIZE + 2, b.getY() + SIZE, c);
             }
-            g.blit(icon(spell), b.getX() + 4, b.getY() + 4, b.getX() + 20, b.getY() + 20, 0, 1, 0, 1);
+            if (wand.knows(stack, i)) g.blit(icon(spell), b.getX() + 4, b.getY() + 4, b.getX() + 20, b.getY() + 20, 0, 1, 0, 1);
+            else g.centeredText(font, "?", b.getX() + SIZE / 2, b.getY() + 8, 0xFF8A93A0);
         }
         // in the middle: the spell under the mouse, or the one it has now
         Spell shown = current;
-        for (int i = 0; i < buttons.size(); i++) if (buttons.get(i).isHovered()) shown = spells.get(i);
+        for (int i = 0; i < buttons.size(); i++) if (buttons.get(i).isHovered() && wand.knows(stack, i)) shown = spells.get(i);
         g.centeredText(font, stack.getItem().getName(stack).copy().withStyle(net.minecraft.ChatFormatting.RED), cx, cy - 14, 0xFFFFFFFF);
         g.centeredText(font, shown.displayName(), cx, cy, 0xFFFFFFFF);
     }

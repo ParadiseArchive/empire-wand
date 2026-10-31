@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "empirewand:item/spell_scroll",
+    "layer1": "empirewand:item/spell_scroll_ribbon"
+  }
+}

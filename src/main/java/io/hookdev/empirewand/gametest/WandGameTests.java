@@ -47,6 +47,8 @@ public final class WandGameTests {
         test("capture_picks_it_up_and_throws_it", WandGameTests::capturePicksItUpAndThrowsIt, 20);
         test("confuse_makes_it_dizzy", WandGameTests::confuseMakesItDizzy, 20);
         test("blood_magic_costs_blood", WandGameTests::bloodMagicCostsBlood, 20);
+        test("a_scroll_teaches_a_spell", WandGameTests::aScrollTeachesASpell, 20);
+        test("scrolls_turn_up_in_chests", WandGameTests::scrollsTurnUpInChests, 20);
         test("every_spell_casts", WandGameTests::everySpellCasts, 600);
     }
 
@@ -95,9 +97,14 @@ public final class WandGameTests {
         WandItem item = Content.EMPIRE_WAND.get();
         helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "a new wand starts on Explode");
         helper.assertTrue(item.next(wand, player) == Spell.LIGHTNING_ARROW, "then Lightning Arrow, as in the plugin");
-        for (int i = 1; i < Spell.EMPIRE.size(); i++) item.next(wand, player);
-        helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "once round all its spells: Explode again");
+        for (int i = 1; i < item.starters(); i++) item.next(wand, player);
+        helper.assertTrue(item.spell(wand) == Spell.EXPLODE, "a new wand knows four: round to Explode again");
+        helper.assertTrue(item.learn(wand, Spell.COMET) && !item.learn(wand, Spell.COMET), "a scroll teaches it Comet, once");
+        for (int i = 0; i < 4; i++) item.next(wand, player);
+        helper.assertTrue(item.spell(wand) == Spell.COMET, "Comet is in the round now, it skips what it does not know");
+        helper.assertFalse(item.learn(wand, Spell.FREEZE), "Freeze is not an Empire Wand spell");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.BLOOD_MAGIC.get()));
+        Content.BLOOD_MAGIC.get().learn(player.getMainHandItem(), Spell.BLOOD_SPARK);
         player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
         helper.assertTrue(Content.BLOOD_MAGIC.get().spell(player.getMainHandItem()) == Spell.BLOOD_SPARK, "Blood Magic: Blood Wave, then Blood Spark");
         helper.assertTrue(player.getMainHandItem().getHoverName().getString().contains("Blood Spark"), "its name says which");
@@ -170,6 +177,37 @@ public final class WandGameTests {
         player.setHealth(Spells.BLOOD_PRICE);
         Spells.cast(player, Spell.BLOOD_SPARK, true);
         helper.assertTrue(player.isAlive() && player.getHealth() == Spells.BLOOD_PRICE, "with half a heart left: no blood to give, and alive");
+        helper.succeed();
+    }
+
+    private static void aScrollTeachesASpell(GameTestHelper helper) {
+        ServerPlayer player = caster(helper);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL); // so the scroll is used up
+        ItemStack wand = new ItemStack(Content.FROST_WAND.get());
+        player.setItemInHand(InteractionHand.OFF_HAND, wand);
+        player.setItemInHand(InteractionHand.MAIN_HAND, io.hookdev.empirewand.ScrollItem.of(Spell.BLIZZARD));
+        helper.assertFalse(Content.FROST_WAND.get().knows(wand, 2), "a new Frost Wand does not know Blizzard");
+        player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        helper.assertTrue(Content.FROST_WAND.get().knows(player.getOffhandItem(), 2), "the scroll teaches it Blizzard");
+        helper.assertTrue(player.getMainHandItem().isEmpty(), "and is used up");
+        helper.succeed();
+    }
+
+    private static void scrollsTurnUpInChests(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var params = new net.minecraft.world.level.storage.loot.LootParams.Builder(level)
+                .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, helper.absoluteVec(Vec3.ZERO))
+                .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST);
+        int library = 0, house = 0;
+        for (String table : new String[] {"chests/stronghold_library", "chests/village/village_plains_house"}) {
+            var loot = level.getServer().reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, Identifier.withDefaultNamespace(table)));
+            for (int i = 0; i < 50; i++) for (ItemStack stack : loot.getRandomItems(params)) {
+                if (stack.is(Content.SPELL_SCROLL.get()) && table.contains("library")) library++;
+                else if (stack.is(Content.SPELL_SCROLL.get())) house++;
+            }
+        }
+        helper.assertTrue(library > 0, "a stronghold library holds scrolls");
+        helper.assertTrue(house == 0, "a village house does not");
         helper.succeed();
     }
 
